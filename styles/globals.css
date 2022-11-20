@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: "Poppins", sans-serif;
+}
+
+::-webkit-scrollbar {
+  width: 0;
+}
+
+header.header {
+  box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 12px;
+  @apply flex py-2 px-6 h-[66px] justify-between items-center fixed top-0 left-0 w-full bg-white z-10;
+}
