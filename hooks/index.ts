@@ -1,4 +1,7 @@
+import { useEffect, useState } from "react";
+import { ethers } from "ethers";
 import { useCall, useCalls } from "@usedapp/core";
+import { JsonRpcSigner } from "@ethersproject/providers";
 import { contract } from "../constants";
 
 export function useGetOwners(args: any[]) {
@@ -24,7 +27,7 @@ export function useIsOwner(args: any[]) {
           contract: contract,
           method: "isOwner",
           args: args,
-        }
+        },
     ) ?? {};
 
   if (error) {
@@ -56,7 +59,7 @@ export function useGetWalletName(args: any[]) {
         contract: contract,
         method: "returnWalletName",
         args: args,
-      }
+      },
     ) ?? {};
 
   if (error) {
@@ -73,7 +76,7 @@ export function useGetWalletsCount(args: any[]) {
         contract: contract,
         method: "returnWalletCount",
         args: args,
-      }
+      },
     ) ?? {};
 
   if (error) {
@@ -100,7 +103,7 @@ export function useGetWallets(args: any[], totalWallet: number) {
   results.forEach((result: any, idx: number) => {
     if (result?.error) {
       console.error(
-        `Error encountered calling 'returnWallet' on ${calls[idx]?.contract.address}: ${result.error.message}`
+        `Error encountered calling 'returnWallet' on ${calls[idx]?.contract.address}: ${result.error.message}`,
       );
       return undefined;
     }
@@ -141,7 +144,7 @@ export function useGetTransactions(args: any[], totalTransaction: number) {
   results.forEach((result: any, idx: number) => {
     if (result?.error) {
       console.error(
-        `Error encountered calling 'getTransaction' on ${calls[idx]?.contract.address}: ${result.error.message}`
+        `Error encountered calling 'getTransaction' on ${calls[idx]?.contract.address}: ${result.error.message}`,
       );
       return undefined;
     }
@@ -177,4 +180,31 @@ export function useIsTxConfirmed(args: any[]) {
     return undefined;
   }
   return value;
+}
+
+export function useGetWalletAddress() {
+  const [signer, setSigner] = useState<JsonRpcSigner>();
+
+  useEffect(() => {
+    if (!window?.ethereum) return;
+    const provider = new ethers.providers.Web3Provider(window?.ethereum);
+
+    const connectMetamask = async () => {
+      await provider.send("eth_requestAccounts", []);
+      const safeOwner = provider.getSigner(0);
+      setSigner(safeOwner);
+      window?.ethereum?.on("accountsChanged", accountsChanged);
+    };
+
+    const accountsChanged = async (accounts: string[]) => {
+      await provider.send("eth_requestAccounts", []);
+      const safeOwner = provider.getSigner(0);
+      setSigner(safeOwner);
+    };
+    connectMetamask();
+
+    return () => window?.ethereum?.removeListener("accountsChanged", accountsChanged);
+  }, []);
+
+  return signer;
 }

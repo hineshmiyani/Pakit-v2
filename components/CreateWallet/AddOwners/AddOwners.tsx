@@ -22,9 +22,7 @@ const AddOwners = () => {
   const { library, account } = useEthers();
   const [ownerCount, setOwnerCount] = useState<number>(() => {
     if (sessionStorage.getItem("ownersData")) {
-      const { ownersList } = JSON.parse(
-        sessionStorage.getItem("ownersData") || ""
-      );
+      const { ownersList } = JSON.parse(sessionStorage.getItem("ownersData") || "");
       return ownersList.length;
     }
     return 1;
@@ -33,21 +31,15 @@ const AddOwners = () => {
     const ownersData = sessionStorage.getItem("ownersData");
     if (ownersData) {
       const { ownersList } = JSON.parse(ownersData || "");
-      return ownersList.length > 0 && ownersList[0] !== ""
-        ? ownersList
-        : [account];
+      return ownersList.length > 0 && ownersList[0] !== "" ? ownersList : [account];
     }
     return [account];
   });
 
-  const [requiredConfirmations, setRequiredConfirmations] = useState<string>(
-    () => {
-      const ownersData = sessionStorage.getItem("ownersData");
-      return ownersData
-        ? JSON.parse(ownersData || "")?.requiredConfirmations
-        : "1";
-    }
-  );
+  const [requiredConfirmations, setRequiredConfirmations] = useState<string>(() => {
+    const ownersData = sessionStorage.getItem("ownersData");
+    return ownersData ? JSON.parse(ownersData || "")?.requiredConfirmations : "1";
+  });
 
   const handleChange = (event: SelectChangeEvent) => {
     setRequiredConfirmations(event.target.value.toString());
@@ -61,7 +53,7 @@ const AddOwners = () => {
         JSON.stringify({
           ownersList: newOwnersList,
           requiredConfirmations,
-        })
+        }),
       );
     };
   }, [ownersList, requiredConfirmations]);
@@ -78,14 +70,12 @@ const AddOwners = () => {
     <Paper sx={styles.container}>
       <Box px={3}>
         <Typography variant="subtitle1" mb={2}>
-          Your Wallet will have one or more owners. We have prefilled the first
-          owner with your connected wallet details, but you are free to change
-          this to a different owner.
+          Your Wallet will have one or more owners. We have prefilled the first owner with your connected wallet
+          details, but you are free to change this to a different owner.
         </Typography>
         <Typography variant="subtitle1" mb={2}>
-          Add additional owners (e.g. wallets of your teammates) and specify how
-          many of them have to confirm a transaction before it gets executed. In
-          general, the more confirmations required, the more secure your Wallet
+          Add additional owners (e.g. wallets of your teammates) and specify how many of them have to confirm a
+          transaction before it gets executed. In general, the more confirmations required, the more secure your Wallet
           is.
         </Typography>
         <Box mb={4}>
@@ -114,13 +104,7 @@ const AddOwners = () => {
           .fill("")
           .map((val: string, index: number) => (
             <Stack direction="row" key={index} mb={2.5} alignItems="center">
-              <Typography
-                variant="body1"
-                my={1}
-                maxWidth="22.9%"
-                flexBasis="22.9%"
-                textAlign="left"
-              >
+              <Typography variant="body1" my={1} maxWidth="22.9%" flexBasis="22.9%" textAlign="left">
                 Owner {index + 1}
               </Typography>
               <TextField
@@ -143,9 +127,7 @@ const AddOwners = () => {
                     onClick={() => {
                       setOwnerCount((prevOwnerCount) => prevOwnerCount - 1);
                       setOwnersList((prevOwnersList) =>
-                        prevOwnersList.filter(
-                          (owner, ownerIndex) => ownerIndex !== index
-                        )
+                        prevOwnersList.filter((owner, ownerIndex) => ownerIndex !== index),
                       );
                     }}
                   >
@@ -170,12 +152,7 @@ const AddOwners = () => {
           Any transaction requires the confirmation of:
         </Typography>
 
-        <Select
-          value={requiredConfirmations}
-          onChange={handleChange}
-          color="error"
-          sx={{ width: "62px" }}
-        >
+        <Select value={requiredConfirmations} onChange={handleChange} color="error" sx={{ width: "62px" }}>
           {ownersList
             .filter((val) => val !== "")
             .map((val, index) => (
@@ -185,7 +162,8 @@ const AddOwners = () => {
             ))}
         </Select>
         <Typography variant="body2" component="span" ml={1}>
-          out of {ownersList.filter((val) => val !== "").length} owner(s)
+          out of {ownersList.filter((val) => val !== "").length}{" "}
+          {ownersList.filter((val) => val !== "").length > 1 ? "owners" : "owner"}
         </Typography>
       </Box>
     </Paper>

@@ -1,33 +1,27 @@
-import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import {
-  Box,
-  Stepper,
-  Typography,
-  Step,
-  StepLabel,
-  Button,
-  StepConnector,
-} from "@mui/material";
-import { useContractFunction, useEthers } from "@usedapp/core";
+import { useEffect, useState } from "react";
+
 import toast from "react-hot-toast";
+import type Safe from "@gnosis.pm/safe-core-sdk";
+import { Box, Button, Step, StepConnector, StepLabel, Stepper, Typography } from "@mui/material";
+
+import { useGetWalletAddress } from "../../../hooks";
+import { createNewWallet, getWalletByOwner } from "../../../services";
 import { AddOwners, ConnectWallet, NameOfWallet, Review } from "../index";
-import { contract } from "../../../constants";
-import { useGetWallets, useGetWalletsCount } from "../../../hooks";
 import { styles } from "./styles";
 
-const steps = ["Connect Wallet", "Name", "Owners and Confirmations", "Review"];
+interface IStepDescription {
+  [key: number]: JSX.Element;
+}
+const steps = ["Connect Wallet" /* , "Name" */, "Owners and Confirmations", "Review"];
 const getStepDescription = (step: number) => {
-  switch (step) {
-    case 0:
-      return <ConnectWallet />;
-    case 1:
-      return <NameOfWallet />;
-    case 2:
-      return <AddOwners />;
-    case 3:
-      return <Review />;
-  }
+  const stepDescription: IStepDescription = {
+    0: <ConnectWallet />,
+    // 1: <NameOfWallet />,
+    1: <AddOwners />,
+    2: <Review />,
+  };
+  return stepDescription?.[step];
 };
 
 const CreateWallet = () => {
@@ -35,82 +29,85 @@ const CreateWallet = () => {
   const [activeStep, setActiveStep] = useState(0);
   const [completed, setCompleted] = useState<any>({});
   const [disabledBtn, setDisabledBtn] = useState(false);
+  const [isCreated, setIsCreated] = useState(false);
 
   const totalSteps = steps.length;
   const completedSteps = Object.values(completed).filter((step) => step).length;
   const allStepsCompleted = completedSteps === totalSteps;
 
-  const { account } = useEthers();
-  const { state, send } = useContractFunction(contract, "createMultiSig", {});
-  const totalWallet = useGetWalletsCount([account?.toString()]);
-  const walletList = useGetWallets(
-    [account?.toString()],
-    parseInt(totalWallet)
-  );
+  const signer = useGetWalletAddress();
+  useEffect(() => console.log({ signer }), [signer]);
 
   const createWallet = async () => {
     setDisabledBtn(true);
+
     const ownersData = sessionStorage.getItem("ownersData");
-    const walletName =
-      sessionStorage.getItem("walletName") &&
-      JSON.parse(sessionStorage.getItem("walletName") || "");
-    const { ownersList, requiredConfirmations } =
-      ownersData && JSON.parse(ownersData || "");
-    send(ownersList, requiredConfirmations, walletName);
+    // const walletName = sessionStorage.getItem("walletName") && JSON.parse(sessionStorage.getItem("walletName") || "");
+    const { ownersList, requiredConfirmations } = ownersData && JSON.parse(ownersData || "");
+
+    let confirmTxToast: string | undefined, loadingToast, successToast: string | undefined;
+    const props = {
+      safeAccountConfig: {
+        threshold: parseInt(requiredConfirmations),
+        owners: ownersList,
+      },
+      callback: (txHash: string) => {
+        console.log({ txHash });
+        //* Processing Tx
+        confirmTxToast && toast.dismiss(confirmTxToast);
+        loadingToast = toast.loading("Creating Wallet...");
+      },
+    };
+
+    if (signer) {
+      try {
+        //* Confirm Tx
+        confirmTxToast = toast.loading("Please Confirm Transaction...");
+
+        //* Creat Tx
+        const safeSdk: Safe = await createNewWallet(signer, props);
+        const newSafeAddress = safeSdk?.getAddress();
+
+        console.log({ newSafeAddress });
+
+        //* Success Tx
+        if (newSafeAddress) {
+          setIsCreated(true);
+          toast.dismiss(loadingToast);
+          successToast = toast.success("Wallet successfully created!", {
+            duration: 5000,
+          });
+          setTimeout(() => {
+            toast.dismiss(successToast);
+            toast.loading("Redirecting to the wallet...", {
+              duration: 5000,
+            });
+          }, 5000);
+          setDisabledBtn(false);
+        }
+      } catch (err: any) {
+        // Error
+        toast.dismiss(confirmTxToast);
+        toast.error(err?.reason);
+        setDisabledBtn(false);
+      }
+    }
   };
 
   useEffect(() => {
-    console.log({ state });
-    let loadingToast, confirmTxWallet, successToast: string | undefined;
-    switch (state.status) {
-      case "PendingSignature":
-        confirmTxWallet = toast.loading("Please Confirm Transaction...");
-        break;
-      case "Mining":
-        toast.dismiss(confirmTxWallet);
-        loadingToast = toast.loading("Creating Wallet...");
-        break;
-      case "Success":
-        toast.dismiss(loadingToast);
-        successToast = toast.success("Wallet successfully created!", {
-          duration: 5000,
+    if (signer && isCreated) {
+      setTimeout(async () => {
+        const walletList = await getWalletByOwner(signer);
+        console.log({ walletList });
+        router.push({
+          pathname: `/dashboard/${walletList.at(-1)}`,
+          query: { id: walletList.length - 1 },
         });
-        setTimeout(() => {
-          toast.dismiss(successToast);
-          toast.loading("Redirecting to the wallet...", {
-            duration: 5000,
-          });
-        }, 5000);
-        setDisabledBtn(false);
-        break;
-      case "Exception":
-        toast.dismiss(loadingToast);
-        toast.error(state?.errorMessage || "");
-        setDisabledBtn(false);
-        break;
-      case "Fail":
-        toast.error(state?.errorMessage || "");
-        setDisabledBtn(false);
-        break;
-      default:
-        break;
-    }
-  }, [state]);
-
-  useEffect(() => {
-    if (state?.status === "Success") {
-      setTimeout(() => {
-        if (walletList) {
-          router.push({
-            pathname: `/dashboard/${walletList.at(-1)}`,
-            query: { id: walletList.length - 1 },
-          });
-          sessionStorage.removeItem("ownersData");
-          sessionStorage.removeItem("walletName");
-        }
+        sessionStorage.removeItem("ownersData");
+        sessionStorage.removeItem("walletName");
       }, 10000);
     }
-  }, [walletList, parseInt(totalWallet)]);
+  }, [signer, isCreated]);
 
   const handleBack = () => {
     setActiveStep((prevActiveStep) => prevActiveStep - 1);
@@ -139,11 +136,7 @@ const CreateWallet = () => {
         connector={<StepConnector sx={styles.customStepperConnector} />}
       >
         {steps.map((step, index) => (
-          <Step
-            key={step}
-            completed={completed[index]}
-            sx={styles.customStepper}
-          >
+          <Step key={step} completed={completed[index]} sx={styles.customStepper}>
             <StepLabel>{step}</StepLabel>
           </Step>
         ))}
@@ -166,12 +159,7 @@ const CreateWallet = () => {
           <Box width="90%" m="auto">
             {getStepDescription(activeStep)}
             <Box sx={styles.buttonContainer}>
-              <Button
-                onClick={handleBack}
-                variant="text"
-                disabled={activeStep === 0}
-                sx={styles.backButton}
-              >
+              <Button onClick={handleBack} variant="text" disabled={activeStep === 0} sx={styles.backButton}>
                 Back
               </Button>
               <Button
