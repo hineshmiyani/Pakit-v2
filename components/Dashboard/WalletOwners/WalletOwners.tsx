@@ -1,16 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useEthers } from "@usedapp/core";
-import {
-  Typography,
-  Paper,
-  Stack,
-  Box,
-  IconButton,
-  Tooltip,
-  Skeleton,
-} from "@mui/material";
+import { Typography, Paper, Stack, Box, IconButton, Tooltip, Skeleton } from "@mui/material";
 import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
-import { useGetOwners } from "../../../hooks";
+import { useGetOwners, useGetSigner } from "../../../hooks";
 import { ContentCopyRounded } from "@mui/icons-material";
 import { ShareIcon } from "../../index";
 import { useRouter } from "next/router";
@@ -49,10 +41,7 @@ const AddressCell = (params: GridRenderCellParams) => {
           size="small"
           sx={styles.iconButton}
           onClick={() => {
-            window.open(
-              `https://${library?.network?.name}.etherscan.io/address/${params?.value}`,
-              "_blank"
-            );
+            window.open(`https://${library?.network?.name}.etherscan.io/address/${params?.value}`, "_blank");
           }}
         >
           <ShareIcon />
@@ -64,11 +53,11 @@ const AddressCell = (params: GridRenderCellParams) => {
 
 const WalletOwners = () => {
   const router = useRouter();
-  const { id: walletId } = router?.query;
+  const { walletAddress } = router?.query;
   const [rows, setRows] = useState<any[]>([]);
 
-  const { account } = useEthers();
-  const ownersList = useGetOwners([account?.toString(), walletId]);
+  const signer = useGetSigner();
+  const ownersList = useGetOwners(signer, walletAddress);
 
   const columns: GridColDef[] = [
     {
@@ -86,13 +75,7 @@ const WalletOwners = () => {
       headerAlign: "center",
       renderCell: (params: GridRenderCellParams) => (
         // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={params.value}
-          width="34"
-          height="34"
-          alt=""
-          className="rounded-full object-cover"
-        />
+        <img src={params.value} width="34" height="34" alt="" className="rounded-full object-cover" />
       ),
     },
     {
@@ -109,15 +92,16 @@ const WalletOwners = () => {
   useEffect(() => {
     setRows(() => {
       const modifyOwnerList =
+        ownersList &&
         ownersList?.length > 0 &&
-        ownersList?.[0]?.map((owner: string, index: number) => {
+        ownersList?.map((owner: string, index: number) => {
           return {
             id: index + 1,
             avatar: "/asset/images/avatar.png",
             address: owner,
           };
         });
-      return modifyOwnerList;
+      return modifyOwnerList || [];
     });
   }, [ownersList]);
 
@@ -128,7 +112,7 @@ const WalletOwners = () => {
       </Typography>
       <Paper elevation={0} sx={styles.container}>
         <Box sx={styles.datagridContainer}>
-          {rows.length > 0 ? (
+          {rows?.length > 0 ? (
             <DataGrid
               rows={rows}
               columns={columns}
@@ -142,12 +126,7 @@ const WalletOwners = () => {
               {Array(5)
                 .fill(null)
                 .map((_, index) => (
-                  <Skeleton
-                    key={index}
-                    variant="rounded"
-                    width="100%"
-                    height={46}
-                  />
+                  <Skeleton key={index} variant="rounded" width="100%" height={46} />
                 ))}
             </Stack>
           )}

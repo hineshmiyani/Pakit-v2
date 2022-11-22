@@ -1,16 +1,14 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/router";
 
 import { formatEther } from "@ethersproject/units";
-import { useEtherBalance, useEthers } from "@usedapp/core";
+import { useEthers } from "@usedapp/core";
 import { Box, Button, Divider, IconButton, Stack, Tooltip, Typography } from "@mui/material";
 import { AddCircleOutlined, ContentCopyRounded } from "@mui/icons-material";
 
-import { useGetSigner, useGetWallets } from "../../../hooks";
-import { ShareIcon } from "../../index";
-import MakeTransactionDialog from "../MakeTransactionDialog/MakeTransactionDialog";
-import SideDrawer from "../SideDrawer/SideDrawer";
+import { useGetSigner, useGetTokenList, useGetTotalBalance, useGetWallets } from "../../../hooks";
+import { ShareIcon, MakeTransactionDialog, SideDrawer } from "../../index";
 import { styles } from "./styles";
 
 const Sidebar = () => {
@@ -20,9 +18,9 @@ const Sidebar = () => {
 
   const signer = useGetSigner();
   const walletList = useGetWallets(signer);
+  const balance = useGetTotalBalance(signer, walletList?.[+walletId]);
 
   const [tooltipTitle, setTooltipTitle] = useState<string>("Copy to clipboard");
-  const etherBalance = useEtherBalance(walletList?.[+walletId]);
 
   return (
     <Box sx={styles.container}>
@@ -100,7 +98,7 @@ const Sidebar = () => {
                   Total Balance
                 </Typography>
                 <Typography variant="h6" color="primary.main">
-                  {etherBalance ? formatEther(etherBalance) : 0.0} ETH
+                  {balance ? balance : 0.0} USD
                 </Typography>
               </Stack>
 

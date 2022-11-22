@@ -1,28 +1,28 @@
 import { useEffect, useState } from "react";
 
-import { ethers } from "ethers";
+import { BigNumber, ethers } from "ethers";
 import { JsonRpcSigner } from "@ethersproject/providers";
 import { useCall, useCalls } from "@usedapp/core";
 import Safe from "@gnosis.pm/safe-core-sdk";
-import { OwnerResponse } from "@gnosis.pm/safe-service-client";
+import { OwnerResponse, SafeBalanceUsdResponse, TokenInfoListResponse } from "@gnosis.pm/safe-service-client";
 
 import { contract } from "../constants";
 import { createEthersAdapter, safeServiceClient } from "../services";
 
-export function useGetOwners(args: any[]) {
-  const { value, error } =
-    useCall({
-      contract: contract,
-      method: "getOwners",
-      args: args,
-    }) ?? {};
+// export function useGetOwners(args: any[]) {
+//   const { value, error } =
+//     useCall({
+//       contract: contract,
+//       method: "getOwners",
+//       args: args,
+//     }) ?? {};
 
-  if (error) {
-    console.log("Error: ", error.message);
-    return undefined;
-  }
-  return value;
-}
+//   if (error) {
+//     console.log("Error: ", error.message);
+//     return undefined;
+//   }
+//   return value;
+// }
 
 // export function useIsOwner(args: any[]) {
 //   const { value, error } =
@@ -255,4 +255,85 @@ export function useIsOwner(signer: JsonRpcSigner | undefined, walletAddress: str
   }, [signer, walletAddress]);
 
   return isOwner;
+}
+
+/**
+ * Get Multisig Wallet ETH Balance
+ */
+export function useGetWalletBalance(signer: JsonRpcSigner | undefined, walletAddress: string | string[] | undefined) {
+  const [balance, setBalance] = useState<BigNumber>();
+
+  useEffect(() => {
+    if (!walletAddress || Array.isArray(walletAddress) || !signer) return;
+    // IIFE
+    (async () => {
+      const ethAdapter = createEthersAdapter(signer);
+      const safeSdk = await Safe.create({ ethAdapter, safeAddress: walletAddress });
+      const balance = await safeSdk.getBalance();
+      setBalance(balance);
+    })();
+  }, [signer, walletAddress]);
+
+  return balance;
+}
+
+/**
+ * Get Multisig Wallet All Token ETH Balance
+ */
+export function useGetTotalBalance(signer: JsonRpcSigner | undefined, walletAddress: string | string[] | undefined) {
+  const [balance, setBalance] = useState<number>();
+
+  useEffect(() => {
+    if (!walletAddress || Array.isArray(walletAddress) || !signer) return;
+    // IIFE
+    (async () => {
+      const safeService = safeServiceClient(signer);
+      const usdBalances: SafeBalanceUsdResponse[] = await safeService.getUsdBalances(walletAddress);
+      console.log("usdBalances", usdBalances);
+      setBalance(() => usdBalances?.reduce((prev, token) => prev + parseFloat(token?.fiatBalance), 0));
+    })();
+  }, [signer, walletAddress]);
+
+  return balance;
+}
+
+/**
+ * Get Multisig Wallet Owner
+ */
+export function useGetOwners(signer: JsonRpcSigner | undefined, walletAddress: string | string[] | undefined) {
+  const [ownerAddresses, setOwnerAddresses] = useState<string[]>();
+
+  useEffect(() => {
+    if (!walletAddress || Array.isArray(walletAddress) || !signer) return;
+    // IIFE
+    (async () => {
+      const ethAdapter = createEthersAdapter(signer);
+      const safeSdk = await Safe.create({ ethAdapter, safeAddress: walletAddress });
+      const ownerAddresses = await safeSdk.getOwners();
+      console.log("ownerAddresses", ownerAddresses);
+      setOwnerAddresses(ownerAddresses);
+    })();
+  }, [signer, walletAddress]);
+
+  return ownerAddresses;
+}
+
+/**
+ * Get Token List
+ */
+export function useGetTokenList(signer: JsonRpcSigner | undefined) {
+  const [tokenList, setTokenList] = useState<TokenInfoListResponse>();
+
+  useEffect(() => {
+    if (!signer) return;
+    // IIFE
+    (async () => {
+      const safeService = safeServiceClient(signer);
+      const tokenList: TokenInfoListResponse = await safeService.getTokenList();
+      console.log("tokenList", tokenList);
+      setTokenList(tokenList);
+    })();
+  }, [signer]);
+
+  return tokenList;
 }

@@ -1,33 +1,21 @@
 import React from "react";
 import Image from "next/image";
 import { useRouter } from "next/router";
-import { useEtherBalance, useEthers } from "@usedapp/core";
-import { formatEther } from "@ethersproject/units";
-import {
-  Typography,
-  Paper,
-  Card,
-  CardContent,
-  Chip,
-  Stack,
-  Box,
-  Button,
-} from "@mui/material";
-import MakeTransectionDialog from "../../Sidebar/MakeTransactionDialog/MakeTransactionDialog";
-import { useGetWalletName } from "../../../hooks";
+
+import { useEthers } from "@usedapp/core";
+import { Typography, Paper, Card, CardContent, Chip, Stack, Box, Button } from "@mui/material";
+
+import { MakeTransactionDialog } from "../../index";
+import { useGetSigner, useGetTotalBalance } from "../../../hooks";
 import { styles } from "./styles";
 
 const WalletDetails = () => {
   const router = useRouter();
-  const { walletAddress }: any = router?.query;
-  const { id: walletId } = router?.query;
+  const { walletAddress } = router?.query;
 
-  const { account, library } = useEthers();
-  const walletName = useGetWalletName([
-    account?.toString(),
-    walletId && +walletId,
-  ]);
-  const etherBalance = useEtherBalance(walletAddress);
+  const { library } = useEthers();
+  const signer = useGetSigner();
+  const balance = useGetTotalBalance(signer, walletAddress);
 
   return (
     <>
@@ -44,9 +32,9 @@ const WalletDetails = () => {
               alt=""
               className="rounded-full object-cover"
             />
-            <Typography variant="body1" fontWeight="bold" mt={1.5} gutterBottom>
+            {/* <Typography variant="body1" fontWeight="bold" mt={1.5} gutterBottom>
               {walletName}
-            </Typography>{" "}
+            </Typography>{" "} */}
             <Typography variant="body1">
               <Typography variant="body1" component="span" fontWeight="bold">
                 {library?.network?.name?.substring(0, 2)}
@@ -57,22 +45,20 @@ const WalletDetails = () => {
             <Chip label={library?.network?.name} sx={styles.chip} />
             <Stack alignItems="center" direction="row" mt={1.5}>
               <Box>
-                <Typography
-                  variant="body1"
-                  color="primary.main"
-                  fontSize="14px"
-                >
+                <Typography variant="body1" color="primary.main" fontSize="14px">
                   Total Balance
                 </Typography>
                 <Typography variant="h6" color="primary.main">
-                  {etherBalance ? formatEther(etherBalance) : 0.0} ETH
+                  {balance ? balance : 0.0} USD
                 </Typography>
               </Box>
 
               <Box ml="auto">
-                <MakeTransectionDialog walletAddress={walletAddress}>
-                  <Button sx={styles.transactionButton}>New Transaction</Button>
-                </MakeTransectionDialog>
+                {walletAddress && !Array.isArray(walletAddress) && (
+                  <MakeTransactionDialog walletAddress={walletAddress}>
+                    <Button sx={styles.transactionButton}>New Transaction</Button>
+                  </MakeTransactionDialog>
+                )}
               </Box>
             </Stack>
           </CardContent>

@@ -10,5 +10,6 @@ export { default as Main } from "./Main/Main";
 export { default as ShareIcon } from "./ShareIcon/ShareIcon";
 export { default as MakeTransactionDialog } from "./Sidebar/MakeTransactionDialog/MakeTransactionDialog";
 export { default as Sidebar } from "./Sidebar/Sidebar/Sidebar";
+export { default as SideDrawer } from "./Sidebar/SideDrawer/SideDrawer";
 export { default as TransactionProgressStepper } from "./Transaction/TransactionProgressStepper/TransactionProgressStepper";
 export { default as TxNotFound } from "./Transaction/TxNotFound/TxNotFound";
