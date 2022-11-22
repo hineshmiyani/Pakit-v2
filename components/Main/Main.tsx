@@ -1,9 +1,7 @@
 import React, { useEffect } from "react";
-import { utils } from "ethers";
-import { Contract } from "@ethersproject/contracts";
-import { useCall, useContractFunction, useEthers } from "@usedapp/core";
-import { Container } from "@mui/material";
 import { useRouter } from "next/router";
+import { useEthers } from "@usedapp/core";
+import { Container } from "@mui/material";
 
 const Main = () => {
   const router = useRouter();

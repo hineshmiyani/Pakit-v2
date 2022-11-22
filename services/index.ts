@@ -33,13 +33,3 @@ export const createNewWallet = async (signer: JsonRpcSigner, props: DeploySafePr
   const safeFactory = await SafeFactory.create({ ethAdapter });
   return safeFactory?.deploySafe(props);
 };
-
-/**
- * Get Wallet By Owner
- */
-export const getWalletByOwner = async (signer: JsonRpcSigner) => {
-  const ownerAddress = await signer?.getAddress();
-  const safeService = safeServiceClient(signer);
-  const safes: OwnerResponse = await safeService.getSafesByOwner(ownerAddress);
-  return safes?.safes;
-};

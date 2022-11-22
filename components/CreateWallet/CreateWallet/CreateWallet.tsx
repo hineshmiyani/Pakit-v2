@@ -5,8 +5,8 @@ import toast from "react-hot-toast";
 import type Safe from "@gnosis.pm/safe-core-sdk";
 import { Box, Button, Step, StepConnector, StepLabel, Stepper, Typography } from "@mui/material";
 
-import { useGetWalletAddress } from "../../../hooks";
-import { createNewWallet, getWalletByOwner } from "../../../services";
+import { useGetSigner, useGetWallets } from "../../../hooks";
+import { createNewWallet } from "../../../services";
 import { AddOwners, ConnectWallet, NameOfWallet, Review } from "../index";
 import { styles } from "./styles";
 
@@ -26,6 +26,9 @@ const getStepDescription = (step: number) => {
 
 const CreateWallet = () => {
   const router = useRouter();
+  const signer = useGetSigner();
+  const walletList = useGetWallets(signer);
+
   const [activeStep, setActiveStep] = useState(0);
   const [completed, setCompleted] = useState<any>({});
   const [disabledBtn, setDisabledBtn] = useState(false);
@@ -35,14 +38,10 @@ const CreateWallet = () => {
   const completedSteps = Object.values(completed).filter((step) => step).length;
   const allStepsCompleted = completedSteps === totalSteps;
 
-  const signer = useGetWalletAddress();
-  useEffect(() => console.log({ signer }), [signer]);
-
   const createWallet = async () => {
     setDisabledBtn(true);
 
     const ownersData = sessionStorage.getItem("ownersData");
-    // const walletName = sessionStorage.getItem("walletName") && JSON.parse(sessionStorage.getItem("walletName") || "");
     const { ownersList, requiredConfirmations } = ownersData && JSON.parse(ownersData || "");
 
     let confirmTxToast: string | undefined, loadingToast, successToast: string | undefined;
@@ -97,7 +96,6 @@ const CreateWallet = () => {
   useEffect(() => {
     if (signer && isCreated) {
       setTimeout(async () => {
-        const walletList = await getWalletByOwner(signer);
         console.log({ walletList });
         router.push({
           pathname: `/dashboard/${walletList.at(-1)}`,
@@ -105,7 +103,7 @@ const CreateWallet = () => {
         });
         sessionStorage.removeItem("ownersData");
         sessionStorage.removeItem("walletName");
-      }, 10000);
+      }, 7000);
     }
   }, [signer, isCreated]);
 

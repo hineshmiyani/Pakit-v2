@@ -1,25 +1,14 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/router";
+
 import { formatEther } from "@ethersproject/units";
 import { useEtherBalance, useEthers } from "@usedapp/core";
-import {
-  Box,
-  Button,
-  Divider,
-  IconButton,
-  Stack,
-  Tooltip,
-  Typography,
-} from "@mui/material";
+import { Box, Button, Divider, IconButton, Stack, Tooltip, Typography } from "@mui/material";
 import { AddCircleOutlined, ContentCopyRounded } from "@mui/icons-material";
-import {
-  useGetWalletName,
-  useGetWallets,
-  useGetWalletsCount,
-} from "../../../hooks";
-import { ShareIcon } from "../../index";
 
+import { useGetSigner, useGetWallets } from "../../../hooks";
+import { ShareIcon } from "../../index";
 import MakeTransactionDialog from "../MakeTransactionDialog/MakeTransactionDialog";
 import SideDrawer from "../SideDrawer/SideDrawer";
 import { styles } from "./styles";
@@ -27,32 +16,18 @@ import { styles } from "./styles";
 const Sidebar = () => {
   const router = useRouter();
   const { id: walletId }: any = router?.query;
-  const { account, library } = useEthers();
+  const { library } = useEthers();
+
+  const signer = useGetSigner();
+  const walletList = useGetWallets(signer);
+
   const [tooltipTitle, setTooltipTitle] = useState<string>("Copy to clipboard");
-
-  const walletName = useGetWalletName([account?.toString(), +walletId]);
-  const totalWallet = useGetWalletsCount([account?.toString()]);
-  const walletList = useGetWallets(
-    [account?.toString()],
-    parseInt(totalWallet)
-  );
-
   const etherBalance = useEtherBalance(walletList?.[+walletId]);
 
   return (
     <Box sx={styles.container}>
-      <Stack
-        direction="row"
-        alignItems="center"
-        justifyContent="center"
-        p={2}
-        spacing={0.5}
-      >
-        <IconButton
-          sx={styles.addButton}
-          size="small"
-          onClick={() => router.push("/welcome")}
-        >
+      <Stack direction="row" alignItems="center" justifyContent="center" p={2} spacing={0.5}>
+        <IconButton sx={styles.addButton} size="small" onClick={() => router.push("/welcome")}>
           <AddCircleOutlined sx={{ fontSize: "36px" }} />
         </IconButton>
         <Typography variant="h6" sx={styles.addWalletText}>
@@ -64,7 +39,7 @@ const Sidebar = () => {
 
       {router.route.includes("dashboard") &&
         walletId &&
-        [walletList?.[+walletId]]?.map((wallet: "string") => (
+        [walletList?.[+walletId]]?.map((wallet: string) => (
           <Box key={wallet}>
             <Stack p={2} spacing={1.75} alignItems="center">
               <Image
@@ -75,14 +50,14 @@ const Sidebar = () => {
                 className="rounded-full object-cover"
               />
               <Box>
-                <Typography
+                {/* <Typography
                   variant="body1"
                   fontWeight="600"
                   textAlign="center"
                   gutterBottom
                 >
                   {walletName}
-                </Typography>
+                </Typography> */}
                 <Typography variant="body2">
                   <Typography variant="caption" fontWeight="bold">
                     {library?.network?.name?.substring(0, 2)}
@@ -113,10 +88,7 @@ const Sidebar = () => {
                     size="small"
                     sx={styles.iconButton}
                     onClick={() => {
-                      window.open(
-                        `https://${library?.network?.name}.etherscan.io/address/${wallet}`,
-                        "_blank"
-                      );
+                      window.open(`https://${library?.network?.name}.etherscan.io/address/${wallet}`, "_blank");
                     }}
                   >
                     <ShareIcon />
@@ -167,6 +139,7 @@ const Sidebar = () => {
         ))}
 
       <Divider light />
+      {/* Sidebar Drawer */}
       <SideDrawer walletList={walletList} />
     </Box>
   );
