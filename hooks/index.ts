@@ -4,7 +4,15 @@ import { BigNumber, ethers } from "ethers";
 import { JsonRpcSigner } from "@ethersproject/providers";
 import { useCall, useCalls } from "@usedapp/core";
 import Safe from "@gnosis.pm/safe-core-sdk";
-import { OwnerResponse, SafeBalanceUsdResponse, TokenInfoListResponse } from "@gnosis.pm/safe-service-client";
+import {
+  AllTransactionsListResponse,
+  OwnerResponse,
+  SafeBalanceUsdResponse,
+  SafeMultisigConfirmationListResponse,
+  SafeMultisigTransactionListResponse,
+  SafeMultisigTransactionResponse,
+  TokenInfoListResponse,
+} from "@gnosis.pm/safe-service-client";
 
 import { contract } from "../constants";
 import { createEthersAdapter, safeServiceClient } from "../services";
@@ -157,20 +165,20 @@ export function useGetTransactions(args: any[], totalTransaction: number) {
   return results?.map((result: any) => result?.value);
 }
 
-export function useNumConfirmationsRequired(args: any[]) {
-  const { value, error } =
-    useCall({
-      contract: contract,
-      method: "returnNumConfirmationsRequired",
-      args: args,
-    }) ?? {};
+// export function useNumConfirmationsRequired(args: any[]) {
+//   const { value, error } =
+//     useCall({
+//       contract: contract,
+//       method: "returnNumConfirmationsRequired",
+//       args: args,
+//     }) ?? {};
 
-  if (error) {
-    console.log("Error: ", error.message);
-    return undefined;
-  }
-  return value;
-}
+//   if (error) {
+//     console.log("Error: ", error.message);
+//     return undefined;
+//   }
+//   return value;
+// }
 
 export function useIsTxConfirmed(args: any[]) {
   const { value, error } =
@@ -310,7 +318,7 @@ export function useGetOwners(signer: JsonRpcSigner | undefined, walletAddress: s
       const ethAdapter = createEthersAdapter(signer);
       const safeSdk = await Safe.create({ ethAdapter, safeAddress: walletAddress });
       const ownerAddresses = await safeSdk.getOwners();
-      console.log("ownerAddresses", ownerAddresses);
+      // console.log("ownerAddresses", ownerAddresses);
       setOwnerAddresses(ownerAddresses);
     })();
   }, [signer, walletAddress]);
@@ -336,4 +344,113 @@ export function useGetTokenList(signer: JsonRpcSigner | undefined) {
   }, [signer]);
 
   return tokenList;
+}
+
+/**
+ * Get Transaction Information
+ */
+export function useGetTxInfo(signer: JsonRpcSigner | undefined, safeTxHash: string) {
+  const [txInfo, setTxInfoo] = useState<SafeMultisigTransactionResponse>();
+
+  useEffect(() => {
+    if (!signer || !safeTxHash) return;
+    // IIFE
+    (async () => {
+      const safeService = safeServiceClient(signer);
+      const txInfo: SafeMultisigTransactionResponse = await safeService.getTransaction(safeTxHash);
+      console.log("txInfo ---- ", txInfo);
+      setTxInfoo(txInfo);
+    })();
+  }, [signer, safeTxHash]);
+
+  return txInfo;
+}
+
+/**
+ * Get Pending Transactions
+ */
+export function useGetPendingTxs(signer: JsonRpcSigner | undefined, walletAddress: string | string[] | undefined) {
+  const [pendingTxs, setPendingTxs] = useState<SafeMultisigTransactionListResponse>();
+
+  useEffect(() => {
+    if (!walletAddress || Array.isArray(walletAddress) || !signer) return;
+    // IIFE
+    (async () => {
+      const safeService = safeServiceClient(signer);
+      const pendingTxs: SafeMultisigTransactionListResponse = await safeService.getPendingTransactions(walletAddress);
+      console.log("pendingTxs ---- ", pendingTxs);
+      setPendingTxs(pendingTxs);
+    })();
+  }, [signer, walletAddress]);
+
+  return pendingTxs?.results;
+}
+
+/**
+ * Get All Transactions
+ */
+export function useGetAllTxs(signer: JsonRpcSigner | undefined, walletAddress: string | string[] | undefined) {
+  const [allTxs, setAllTxs] = useState<AllTransactionsListResponse>();
+
+  useEffect(() => {
+    if (!walletAddress || Array.isArray(walletAddress) || !signer) return;
+    // IIFE
+    (async () => {
+      const safeService = safeServiceClient(signer);
+      const allTxs: AllTransactionsListResponse = await safeService.getAllTransactions(walletAddress);
+      console.log("allTxs ---- ", allTxs);
+      setAllTxs(allTxs);
+    })();
+  }, [signer, walletAddress]);
+
+  return allTxs?.results;
+}
+
+/**
+ * Get Number of Confirmations Required
+ */
+export function useNumConfirmationsRequired(
+  signer: JsonRpcSigner | undefined,
+  walletAddress: string | string[] | undefined,
+) {
+  const [confirmations, setConfirmations] = useState<number>();
+
+  useEffect(() => {
+    if (!walletAddress || Array.isArray(walletAddress) || !signer) return;
+    // IIFE
+    (async () => {
+      const ethAdapter = createEthersAdapter(signer);
+      const safeSdk = await Safe.create({ ethAdapter, safeAddress: walletAddress });
+      const threshold = await safeSdk.getThreshold();
+      console.log("threshold", threshold);
+      setConfirmations(threshold);
+    })();
+  }, [signer, walletAddress]);
+
+  return confirmations;
+}
+
+/**
+ * Get Owners Who Approved Tx
+ */
+export function useGetOwnersApprovedTx(
+  signer: JsonRpcSigner | undefined,
+  walletAddress: string | string[] | undefined,
+  txHash: string,
+) {
+  const [ownerAddresses, setOwnerAddresses] = useState<string[]>();
+
+  useEffect(() => {
+    if (!walletAddress || Array.isArray(walletAddress) || !signer || !txHash) return;
+    // IIFE
+    (async () => {
+      const ethAdapter = createEthersAdapter(signer);
+      const safeSdk = await Safe.create({ ethAdapter, safeAddress: walletAddress });
+      const ownerAddresses = await safeSdk.getOwnersWhoApprovedTx(txHash);
+      console.log("approvedTxOwnerList ", ownerAddresses);
+      setOwnerAddresses(ownerAddresses);
+    })();
+  }, [signer, walletAddress, txHash]);
+
+  return ownerAddresses;
 }

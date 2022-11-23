@@ -20,12 +20,11 @@ import {
   Divider,
   TextField,
 } from "@mui/material";
-import {
-  TollRounded,
-  Close,
-  ContentCopyRounded,
-  CallMade,
-} from "@mui/icons-material";
+import { TollRounded, Close, ContentCopyRounded, CallMade } from "@mui/icons-material";
+import { SafeTransactionDataPartial } from "@gnosis.pm/safe-core-sdk-types";
+
+import { createNewTransaction } from "../../../services";
+import { useGetOwnersApprovedTx, useGetSigner, useGetTxInfo, useGetPendingTxs, useGetAllTxs } from "../../../hooks";
 import { contract } from "../../../constants";
 import { ShareIcon } from "../../index";
 import { styles } from "./styles";
@@ -49,11 +48,7 @@ const CustomDialogTitle = (props: DialogTitleProps) => {
     <DialogTitle sx={styles.dialogTitle} {...other}>
       {children}
       {onClose ? (
-        <IconButton
-          aria-label="close"
-          onClick={onClose}
-          sx={styles.closeButton}
-        >
+        <IconButton aria-label="close" onClick={onClose} sx={styles.closeButton}>
           <Close />
         </IconButton>
       ) : null}
@@ -72,34 +67,37 @@ type Props = {
   walletAddress: string;
 };
 
-const MakeTransactionDialog: React.FC<Props> = ({
-  children,
-  walletAddress,
-}) => {
+const MakeTransactionDialog: React.FC<Props> = ({ children, walletAddress }) => {
   const router = useRouter();
   const { id: walletId } = router?.query;
 
   const [open, setOpen] = useState<boolean>(false);
   const [disabledBtn, setDisabledBtn] = useState<boolean>(false);
   const [tooltipTitle, setTooltipTitle] = useState<string>("Copy to clipboard");
-  const [showDialogStep, setShowDialogStep] = useState<string>(
-    DialogStep.CHOOSE_TRANSACTION
-  );
+  const [showDialogStep, setShowDialogStep] = useState<string>(DialogStep.CHOOSE_TRANSACTION);
   const [depositAmount, setDepositAmount] = useState<number>(0);
   const [sendAmount, setSendAmount] = useState<number>(0);
   const [recipientAddress, setRecipientAddress] = useState<string>("");
 
   const { account, library } = useEthers();
+  const signer = useGetSigner();
+
+  // const txInfo = useGetTxInfo(signer, "0x23bb819d08d620f80c834eb5abf7fc35504d1ce6408e8dc9fd505be696a6dfa6");
+  // console.log("txInfo", txInfo);
+  // 0x8b9a196e4bf8c3d8ee7055346739f8736c1e94dc03d5734a111783432daf913d
+  // const ownerAddress = useGetOwnersApprovedTx(
+  //   signer,
+  //   walletAddress,
+  //   "0x23bb819d08d620f80c834eb5abf7fc35504d1ce6408e8dc9fd505be696a6dfa6",
+  // );
+
+  // const pendingTxs = useGetPendingTxs(signer, walletAddress);
+  // const allTxs = useGetAllTxs(signer, walletAddress);
+
   const accountBalance = useEtherBalance(account?.toString());
   const walletBalance: any = useEtherBalance(walletAddress);
-  const { state: depositTxState, send: deposit } = useContractFunction(
-    contract,
-    "deposit"
-  );
-  const { state: submitTxState, send: submitTx } = useContractFunction(
-    contract,
-    "submitTransaction"
-  );
+  const { state: depositTxState, send: deposit } = useContractFunction(contract, "deposit");
+  const { state: submitTxState, send: submitTx } = useContractFunction(contract, "submitTransaction");
 
   const depositEther = () => {
     setDisabledBtn(true);
@@ -110,18 +108,28 @@ const MakeTransactionDialog: React.FC<Props> = ({
       });
   };
 
-  const sendEther = () => {
+  const sendEther = async () => {
     setDisabledBtn(true);
-    sendAmount !== 0 &&
-      recipientAddress &&
-      walletId &&
-      submitTx(
-        account,
-        +walletId,
-        recipientAddress,
-        parseEther(sendAmount?.toString()),
-        "0x00"
-      );
+    if (!walletAddress || Array.isArray(walletAddress) || !signer || !recipientAddress) return;
+
+    const safeTransactionData: SafeTransactionDataPartial = {
+      to: recipientAddress,
+      value: parseEther(sendAmount?.toString()).toString(),
+      data: "0x00",
+    };
+
+    const createTx = await createNewTransaction(signer, walletAddress, safeTransactionData);
+    setDisabledBtn(false);
+    // sendAmount !== 0 &&
+    //   recipientAddress &&
+    //   walletId &&
+    //   submitTx(
+    //     account,
+    //     +walletId,
+    //     recipientAddress,
+    //     parseEther(sendAmount?.toString()),
+    //     "0x00"
+    //   );
   };
 
   useEffect(() => {
@@ -137,12 +145,9 @@ const MakeTransactionDialog: React.FC<Props> = ({
         break;
       case "Success":
         toast.dismiss(loadingToast);
-        successToast = toast.success(
-          "Transaction has been successfully submitted! ",
-          {
-            duration: 5000,
-          }
-        );
+        successToast = toast.success("Transaction has been successfully submitted! ", {
+          duration: 5000,
+        });
         setDisabledBtn(false);
         setTimeout(() => {
           toast.dismiss(successToast);
@@ -185,12 +190,9 @@ const MakeTransactionDialog: React.FC<Props> = ({
         break;
       case "Success":
         toast.dismiss(loadingToast);
-        successToast = toast.success(
-          "Ether has been successfully deposited! ",
-          {
-            duration: 5000,
-          }
-        );
+        successToast = toast.success("Ether has been successfully deposited! ", {
+          duration: 5000,
+        });
         setDisabledBtn(false);
         setTimeout(() => {
           toast.dismiss(successToast);
@@ -231,11 +233,7 @@ const MakeTransactionDialog: React.FC<Props> = ({
   return (
     <Box>
       {children && React.cloneElement(children, { onClick: handleClickOpen })}
-      <CustomDialog
-        onClose={handleClose}
-        aria-labelledby="customized-dialog-title"
-        open={open}
-      >
+      <CustomDialog onClose={handleClose} aria-labelledby="customized-dialog-title" open={open}>
         <CustomDialogTitle id="customized-dialog-title" onClose={handleClose}>
           {showDialogStep === DialogStep.CHOOSE_TRANSACTION && "Send"}
           {showDialogStep === DialogStep.DEPOSIT_FUNDS && "Deposit funds"}
@@ -307,10 +305,7 @@ const MakeTransactionDialog: React.FC<Props> = ({
                       size="small"
                       sx={styles.iconButton}
                       onClick={() => {
-                        window.open(
-                          `https://${library?.network?.name}.etherscan.io/address/${account}`,
-                          "_blank"
-                        );
+                        window.open(`https://${library?.network?.name}.etherscan.io/address/${account}`, "_blank");
                       }}
                     >
                       <ShareIcon />
@@ -324,10 +319,7 @@ const MakeTransactionDialog: React.FC<Props> = ({
                   Balance :{" "}
                   <Typography variant="body2" component="span" fontWeight="600">
                     {" "}
-                    {accountBalance
-                      ? parseFloat(formatEther(accountBalance)).toFixed(4)
-                      : 0.0}{" "}
-                    ETH
+                    {accountBalance ? parseFloat(formatEther(accountBalance)).toFixed(4) : 0.0} ETH
                   </Typography>{" "}
                 </Typography>
               </Box>
@@ -402,10 +394,7 @@ const MakeTransactionDialog: React.FC<Props> = ({
                       size="small"
                       sx={styles.iconButton}
                       onClick={() => {
-                        window.open(
-                          `https://${library?.network?.name}.etherscan.io/address/${account}`,
-                          "_blank"
-                        );
+                        window.open(`https://${library?.network?.name}.etherscan.io/address/${account}`, "_blank");
                       }}
                     >
                       <ShareIcon />
@@ -419,10 +408,7 @@ const MakeTransactionDialog: React.FC<Props> = ({
                   Balance :{" "}
                   <Typography variant="body2" component="span" fontWeight="600">
                     {" "}
-                    {walletBalance
-                      ? parseFloat(formatEther(walletBalance)).toFixed(4)
-                      : 0.0}{" "}
-                    ETH
+                    {walletBalance ? parseFloat(formatEther(walletBalance)).toFixed(4) : 0.0} ETH
                   </Typography>{" "}
                 </Typography>
               </Box>

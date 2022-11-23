@@ -15,17 +15,9 @@ import {
   Tabs,
   Typography,
 } from "@mui/material";
-import { CallMade, ExpandMore, PeopleAltOutlined } from "@mui/icons-material";
-import {
-  useGetTransactionCount,
-  useGetTransactions,
-  useNumConfirmationsRequired,
-} from "../../../../hooks";
-import {
-  AccountAvatar,
-  TransactionProgressStepper,
-  TxNotFound,
-} from "../../../../components";
+import { CallMade, CallReceived, ExpandMore, HighlightOff, PeopleAltOutlined } from "@mui/icons-material";
+import { useGetAllTxs, useGetPendingTxs, useGetSigner, useNumConfirmationsRequired } from "../../../../hooks";
+import { AccountAvatar, TransactionProgressStepper, TxNotFound } from "../../../../components";
 import { styles } from "./styles";
 
 interface TabPanelProps {
@@ -60,9 +52,14 @@ const a11yProps = (index: number) => {
 const queueText = "Queued transactions will appear here";
 const completedText = "Completed transactions will appear here";
 
+enum TxType {
+  ETHEREUM_TRANSACTION = "ETHEREUM_TRANSACTION",
+  MULTISIG_TRANSACTION = "MULTISIG_TRANSACTION",
+}
+
 const Transactions = () => {
   const router = useRouter();
-  const { id: walletId } = router?.query;
+  const { walletAddress, id: walletId } = router?.query;
   const [value, setValue] = useState(0);
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -70,20 +67,11 @@ const Transactions = () => {
   };
 
   const { account } = useEthers();
-  const confirmationsRequired = useNumConfirmationsRequired([
-    account?.toString(),
-    walletId ? +walletId : 0,
-  ]);
+  const signer = useGetSigner();
 
-  const totalTransaction = useGetTransactionCount([
-    account?.toString(),
-    walletId ? +walletId : 0,
-  ]);
-
-  const transactionsList = useGetTransactions(
-    [account?.toString(), walletId && +walletId],
-    totalTransaction ? parseInt(totalTransaction) : 0
-  );
+  const confirmationsRequired = useNumConfirmationsRequired(signer, walletAddress);
+  const transactionsList = useGetAllTxs(signer, walletAddress);
+  const pendingTxList = useGetPendingTxs(signer, walletAddress);
 
   return (
     <>
@@ -94,272 +82,273 @@ const Transactions = () => {
 
         <Box width="100%">
           <Box borderBottom={1} borderColor="divider">
-            <Tabs
-              value={value}
-              onChange={handleChange}
-              aria-label="tabs"
-              sx={styles.tabsContainer}
-            >
+            <Tabs value={value} onChange={handleChange} aria-label="tabs" sx={styles.tabsContainer}>
               <Tab sx={styles.tab} label="Queue" {...a11yProps(0)} />
               <Tab sx={styles.tab} label="Completed" {...a11yProps(1)} />
             </Tabs>
           </Box>
+
+          {/* Pending Txs */}
           <TabPanel value={value} index={0}>
             <Box>
-              {transactionsList
-                ?.reverse()
-                ?.map((transaction: any, index: number) => {
-                  if (transaction?.executed === false) {
-                    return (
-                      <Accordion
-                        key={transaction?.to + index}
-                        sx={styles.accordionContainer}
-                      >
-                        <AccordionSummary
-                          expandIcon={<ExpandMore />}
-                          sx={styles.accordionSummary}
-                        >
-                          <Stack
-                            direction="row"
-                            spacing={2}
-                            alignItems="center"
-                            width="100%"
-                          >
-                            <Box flexBasis="10%" maxWidth="10%">
-                              <Typography>
-                                <Typography component="span" fontWeight="600">
-                                  Tx:{" "}
-                                </Typography>
-                                {transactionsList.length - index}
+              {pendingTxList?.map((transaction: any, index: number) => {
+                {
+                  console.log(`transaction ${index}`, "isExecuted" in transaction && transaction?.isExecuted === false);
+                }
+                if ("isExecuted" in transaction && transaction?.isExecuted === false) {
+                  return (
+                    <Accordion key={transaction?.to + index} sx={styles.accordionContainer}>
+                      <AccordionSummary expandIcon={<ExpandMore />} sx={styles.accordionSummary}>
+                        <Stack direction="row" spacing={2} alignItems="center" width="100%">
+                          <Box flexBasis="10%" maxWidth="10%">
+                            <Typography>
+                              <Typography component="span" fontWeight="600">
+                                Tx:{" "}
                               </Typography>
-                            </Box>
-
-                            <Box
-                              display="flex"
-                              alignItems="center"
-                              gap={1.2}
-                              flexBasis="20%"
-                              maxWidth="20%"
-                            >
-                              <CallMade sx={{ color: "primary.buttonColor" }} />
-                              <Typography>Send</Typography>
-                            </Box>
-
-                            <Box
-                              display="flex"
-                              alignItems="center"
-                              gap={1.2}
-                              flexBasis="25%"
-                              maxWidth="25%"
-                            >
-                              <Image
-                                src="/asset/images/ethLogo.png"
-                                height={26}
-                                width={26}
-                                className="rounded-full object-cover"
-                                alt=""
-                              />
-                              <Typography>
-                                {transaction?.value &&
-                                  formatEther(transaction?.value)}{" "}
-                                ETH
-                              </Typography>
-                            </Box>
-
-                            <Box
-                              display="flex"
-                              alignItems="center"
-                              gap={1.2}
-                              flexBasis="25%"
-                              maxWidth="25%"
-                            >
-                              <PeopleAltOutlined />
-                              <Typography>
-                                {parseInt(transaction?.numConfirmations)} out of{" "}
-                                {parseInt(confirmationsRequired)}
-                              </Typography>
-                            </Box>
-
-                            <Typography
-                              variant="body2"
-                              sx={styles.confirmationText}
-                            >
-                              Needs Confirmation
+                              {transaction?.nonce}
                             </Typography>
-                          </Stack>
-                        </AccordionSummary>
-                        <Divider />
-                        <AccordionDetails sx={{ pt: 2 }}>
-                          <Box display="flex" alignItems="top" gap={3}>
-                            <Box>
-                              <Typography variant="body1">
-                                Send{" "}
-                                <Typography
-                                  variant="body1"
-                                  component="span"
-                                  fontWeight="700"
-                                >
-                                  {formatEther(transaction?.value)}{" "}
-                                </Typography>
-                                ETH to:
-                              </Typography>
-                              <Box my={1}>
-                                <AccountAvatar toAddress={transaction?.to} />
-                              </Box>
-                            </Box>
+                          </Box>
 
-                            <Divider orientation="vertical" flexItem />
+                          <Box display="flex" alignItems="center" gap={1.2} flexBasis="20%" maxWidth="20%">
+                            <CallMade sx={{ color: "primary.buttonColor" }} />
+                            <Typography>Send</Typography>
+                          </Box>
+
+                          <Box display="flex" alignItems="center" gap={1.2} flexBasis="25%" maxWidth="25%">
+                            <Image
+                              src="/asset/images/ethLogo.png"
+                              height={26}
+                              width={26}
+                              className="rounded-full object-cover"
+                              alt=""
+                            />
+                            <Typography>{transaction?.value && formatEther(transaction?.value)} ETH</Typography>
+                          </Box>
+
+                          <Box display="flex" alignItems="center" gap={1.2} flexBasis="25%" maxWidth="25%">
+                            <PeopleAltOutlined />
+                            <Typography>
+                              {parseInt(transaction?.confirmations?.length)} out of {confirmationsRequired}
+                            </Typography>
+                          </Box>
+
+                          <Typography variant="body2" sx={styles.confirmationText}>
+                            Needs Confirmation
+                          </Typography>
+                        </Stack>
+                      </AccordionSummary>
+                      <Divider />
+                      <AccordionDetails sx={{ pt: 2 }}>
+                        <Box display="flex" alignItems="top" gap={3}>
+                          <Box>
+                            <Typography variant="body1">
+                              Send{" "}
+                              <Typography variant="body1" component="span" fontWeight="700">
+                                {formatEther(transaction?.value)}{" "}
+                              </Typography>
+                              ETH to:
+                            </Typography>
+                            <Box my={1}>
+                              <AccountAvatar toAddress={transaction?.to} />
+                            </Box>
+                          </Box>
+
+                          <Divider orientation="vertical" flexItem />
+                          {confirmationsRequired && (
                             <Box>
                               <TransactionProgressStepper
                                 transaction={transaction}
-                                txIndex={transactionsList?.length - index - 1}
-                                confirmationsRequired={parseInt(
-                                  confirmationsRequired
-                                )}
+                                confirmationsRequired={confirmationsRequired}
                               />
                             </Box>
-                          </Box>
-                        </AccordionDetails>
-                      </Accordion>
-                    );
-                  }
-                  return null;
-                })}
-              {transactionsList.filter(
-                (transaction: any) => transaction?.executed === false
-              )?.length === 0 && <TxNotFound text={queueText} />}
+                          )}
+                        </Box>
+                      </AccordionDetails>
+                    </Accordion>
+                  );
+                }
+                return null;
+              })}
+              {pendingTxList?.filter((transaction: any) => transaction?.isExecuted === false)?.length === 0 && (
+                <TxNotFound text={queueText} />
+              )}
             </Box>
           </TabPanel>
+
+          {/* Completed Txs */}
           <TabPanel value={value} index={1}>
             <Box>
-              {transactionsList
-                ?.reverse()
-                ?.map((transaction: any, index: number) => {
-                  if (transaction?.executed === true) {
-                    return (
-                      <Accordion
-                        key={transaction?.to + index}
-                        sx={{
-                          my: 1.5,
-                          borderRadius: "4px !important",
-                          "&::before": { height: 0 },
-                        }}
-                      >
-                        <AccordionSummary
-                          expandIcon={<ExpandMore />}
-                          sx={styles.accordionSummary}
-                        >
-                          <Stack
-                            direction="row"
-                            spacing={2}
-                            alignItems="center"
-                            width="100%"
-                          >
-                            <Box flexBasis="10%" maxWidth="10%">
+              {transactionsList?.map((transaction: any, index: number) => {
+                if (!("isExecuted" in transaction) || transaction?.isExecuted === true) {
+                  return (
+                    <Accordion
+                      key={transaction?.to + index}
+                      sx={{
+                        my: 1.5,
+                        borderRadius: "4px !important",
+                        "&::before": { height: 0 },
+                      }}
+                    >
+                      <AccordionSummary expandIcon={<ExpandMore />} sx={styles.accordionSummary}>
+                        <Stack direction="row" spacing={2} alignItems="center" width="100%">
+                          <Box flexBasis="10%" maxWidth="10%">
+                            {transaction?.txType === TxType.MULTISIG_TRANSACTION && (
                               <Typography>
                                 <Typography component="span" fontWeight="600">
                                   Tx:{" "}
                                 </Typography>
-                                {index + 1}
+                                {transaction?.nonce}
+                              </Typography>
+                            )}
+                          </Box>
+
+                          {transaction?.transfers?.length === 0 && (
+                            <Box display="flex" alignItems="center" gap={1.2} flexBasis="75%" maxWidth="75%">
+                              {transaction?.txType === TxType.MULTISIG_TRANSACTION && (
+                                <>
+                                  <HighlightOff sx={{ color: "primary.buttonColor" }} />
+                                  <Typography>On Chain Rejection</Typography>
+                                </>
+                              )}
+                            </Box>
+                          )}
+
+                          {transaction?.transfers?.length > 0 && (
+                            <>
+                              <Box display="flex" alignItems="center" gap={1.2} flexBasis="20%" maxWidth="20%">
+                                {transaction?.txType === TxType.MULTISIG_TRANSACTION ? (
+                                  <>
+                                    <CallMade sx={{ color: "primary.buttonColor" }} />
+                                    <Typography>Sent</Typography>
+                                  </>
+                                ) : (
+                                  <>
+                                    <CallReceived sx={{ color: "success.main" }} />
+                                    <Typography>Received</Typography>
+                                  </>
+                                )}
+                              </Box>
+                              <Box display="flex" alignItems="center" gap={1.2} flexBasis="25%" maxWidth="25%">
+                                <Image
+                                  src={
+                                    transaction?.transfers?.[0]?.type === "ETHER_TRANSFER"
+                                      ? "/asset/images/ethLogo.png"
+                                      : transaction?.transfers?.[0]?.tokenInfo?.logoUri
+                                  }
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).src = "/asset/images/token-placeholder.svg";
+                                    (e.target as HTMLImageElement).srcset = "/asset/images/token-placeholder.svg";
+                                  }}
+                                  height={26}
+                                  width={26}
+                                  className="rounded-full object-cover"
+                                  alt=""
+                                />
+                                <Typography>
+                                  {transaction?.txType === TxType.MULTISIG_TRANSACTION && "-"}
+                                  {formatEther(transaction?.transfers?.[0]?.value || "0")}{" "}
+                                  {transaction?.transfers?.[0]?.type === "ETHER_TRANSFER"
+                                    ? "ETH"
+                                    : transaction?.transfers?.[0]?.tokenInfo?.symbol}
+                                </Typography>
+                              </Box>
+
+                              <Box display="flex" alignItems="center" gap={1.2} flexBasis="25%" maxWidth="25%">
+                                {transaction?.txType === TxType.MULTISIG_TRANSACTION && (
+                                  <>
+                                    <PeopleAltOutlined />
+                                    <Typography>
+                                      {parseInt(transaction?.confirmations?.length)} out of {confirmationsRequired}
+                                    </Typography>
+                                  </>
+                                )}
+                              </Box>
+                            </>
+                          )}
+
+                          <Typography
+                            variant="body2"
+                            textAlign="center"
+                            sx={{
+                              ...styles.confirmationText,
+                              color: "success.main",
+                            }}
+                          >
+                            Success
+                          </Typography>
+                        </Stack>
+                      </AccordionSummary>
+
+                      <Divider />
+
+                      <AccordionDetails sx={{ pt: 2 }}>
+                        <Box display="flex" alignItems="top" gap={3}>
+                          {transaction?.transfers?.length === 0 && (
+                            <Box width="55.5%">
+                              <Typography variant="body1">
+                                This is an on-chain rejection that didn't send any funds. This on-chain rejection
+                                replaced all transactions with nonce {transaction?.nonce}.
                               </Typography>
                             </Box>
+                          )}
 
-                            <Box
-                              display="flex"
-                              alignItems="center"
-                              gap={1.2}
-                              flexBasis="20%"
-                              maxWidth="20%"
-                            >
-                              <CallMade sx={{ color: "success.main" }} />
-                              <Typography>Sent</Typography>
-                            </Box>
-
-                            <Box
-                              display="flex"
-                              alignItems="center"
-                              gap={1.2}
-                              flexBasis="25%"
-                              maxWidth="25%"
-                            >
-                              <Image
-                                src="/asset/images/ethLogo.png"
-                                height={26}
-                                width={26}
-                                className="rounded-full object-cover"
-                                alt=""
-                              />
-                              <Typography>
-                                {formatEther(transaction?.value)} ETH
-                              </Typography>
-                            </Box>
-
-                            <Box
-                              display="flex"
-                              alignItems="center"
-                              gap={1.2}
-                              flexBasis="25%"
-                              maxWidth="25%"
-                            >
-                              <PeopleAltOutlined />
-                              <Typography>
-                                {parseInt(transaction?.numConfirmations)} out of{" "}
-                                {parseInt(confirmationsRequired)}
-                              </Typography>
-                            </Box>
-
-                            <Typography
-                              variant="body2"
-                              textAlign="center"
-                              sx={{
-                                ...styles.confirmationText,
-                                color: "success.main",
-                              }}
-                            >
-                              Success
-                            </Typography>
-                          </Stack>
-                        </AccordionSummary>
-                        <Divider />
-                        <AccordionDetails sx={{ pt: 2 }}>
-                          <Box display="flex" alignItems="top" gap={3}>
+                          {transaction?.transfers?.length > 0 && transaction?.txType === TxType.MULTISIG_TRANSACTION && (
                             <Box>
                               <Typography variant="body1">
-                                Send{" "}
-                                <Typography
-                                  variant="body1"
-                                  component="span"
-                                  fontWeight="700"
-                                >
-                                  {formatEther(transaction?.value)}{" "}
+                                Sent{" "}
+                                <Typography variant="body1" component="span" fontWeight="700">
+                                  {formatEther(transaction?.transfers?.[0]?.value || "0")}{" "}
                                 </Typography>
-                                ETH to:
+                                {transaction?.transfers?.[0]?.type === "ETHER_TRANSFER"
+                                  ? "ETH"
+                                  : transaction?.transfers?.[0]?.tokenInfo?.symbol}{" "}
+                                to:
                               </Typography>
                               <Box my={1}>
                                 <AccountAvatar toAddress={transaction?.to} />
                               </Box>
                             </Box>
+                          )}
 
-                            <Divider orientation="vertical" flexItem />
+                          {transaction?.transfers?.length > 0 &&
+                            !(transaction?.txType === TxType.MULTISIG_TRANSACTION) && (
+                              <Box>
+                                <Typography variant="body1">
+                                  Received{" "}
+                                  <Typography variant="body1" component="span" fontWeight="700">
+                                    {formatEther(transaction?.transfers?.[0]?.value || "0")}{" "}
+                                  </Typography>
+                                  {transaction?.transfers?.[0]?.type === "ETHER_TRANSFER"
+                                    ? "ETH"
+                                    : transaction?.transfers?.[0]?.tokenInfo?.symbol}{" "}
+                                  from:
+                                </Typography>
+                                <Box my={1}>
+                                  <AccountAvatar toAddress={transaction?.from} />
+                                </Box>
+                              </Box>
+                            )}
+
+                          <Divider orientation="vertical" flexItem />
+
+                          {transaction?.txType === TxType.MULTISIG_TRANSACTION && confirmationsRequired && (
                             <Box>
                               <TransactionProgressStepper
                                 transaction={transaction}
-                                txIndex={transactionsList?.length - index - 1}
-                                confirmationsRequired={parseInt(
-                                  confirmationsRequired
-                                )}
+                                confirmationsRequired={confirmationsRequired}
                               />
                             </Box>
-                          </Box>
-                        </AccordionDetails>
-                      </Accordion>
-                    );
-                  }
-                  return null;
-                })}
-              {transactionsList.filter(
-                (transaction: any) => transaction?.executed === true
-              )?.length === 0 && <TxNotFound text={completedText} />}
+                          )}
+                        </Box>
+                      </AccordionDetails>
+                    </Accordion>
+                  );
+                }
+                return null;
+              })}
+              {transactionsList?.filter((transaction: any) => transaction?.isExecuted === true)?.length === 0 && (
+                <TxNotFound text={completedText} />
+              )}
             </Box>
           </TabPanel>
         </Box>

@@ -17,7 +17,7 @@ import {
 } from "@mui/material";
 import { Check, CircleOutlined } from "@mui/icons-material";
 import { AccountAvatar } from "../../index";
-import { useIsTxConfirmed } from "../../../hooks";
+import { useGetOwnersApprovedTx, useGetSigner } from "../../../hooks";
 import { contract } from "../../../constants";
 import { styles } from "./styles";
 
@@ -33,35 +33,32 @@ const QontoConnector = styled(StepConnector)(({ theme }) => ({
     },
   },
   [`& .${stepConnectorClasses.line}`]: {
-    borderColor:
-      theme.palette.mode === "dark" ? theme.palette.grey[800] : "#bdbdbd",
+    borderColor: theme.palette.mode === "dark" ? theme.palette.grey[800] : "#bdbdbd",
     borderTopWidth: 3,
     borderRadius: 1,
     minHeight: "14px",
   },
 }));
 
-const QontoStepIconRoot = styled("div")<{ ownerState: { active?: boolean } }>(
-  ({ theme, ownerState }) => ({
-    color: theme.palette.mode === "dark" ? theme.palette.grey[700] : "#bdbdbd",
-    display: "flex",
-    height: 24,
-    width: 24,
-    alignItems: "center",
-    justifyContent: "center",
-    ...(ownerState.active && {
-      color: "#f02525",
-    }),
-    "& .QontoStepIcon-completedIcon": {
-      color: "#f02525",
-      zIndex: 1,
-      fontSize: 22,
-    },
-    "& .QontoStepIcon-circle": {
-      fontSize: "16px",
-    },
-  })
-);
+const QontoStepIconRoot = styled("div")<{ ownerState: { active?: boolean } }>(({ theme, ownerState }) => ({
+  color: theme.palette.mode === "dark" ? theme.palette.grey[700] : "#bdbdbd",
+  display: "flex",
+  height: 24,
+  width: 24,
+  alignItems: "center",
+  justifyContent: "center",
+  ...(ownerState.active && {
+    color: "#f02525",
+  }),
+  "& .QontoStepIcon-completedIcon": {
+    color: "#f02525",
+    zIndex: 1,
+    fontSize: 22,
+  },
+  "& .QontoStepIcon-circle": {
+    fontSize: "16px",
+  },
+}));
 
 const QontoStepIcon = (props: StepIconProps) => {
   const { active, completed, className } = props;
@@ -80,66 +77,47 @@ const QontoStepIcon = (props: StepIconProps) => {
 type Props = {
   transaction: any;
   confirmationsRequired: number;
-  txIndex: number;
 };
 
-const TransactionProgressStepper: React.FC<Props> = ({
-  transaction,
-  confirmationsRequired,
-  txIndex,
-}) => {
+const TransactionProgressStepper: React.FC<Props> = ({ transaction, confirmationsRequired }) => {
   const router = useRouter();
   const { walletAddress, id: walletId } = router.query;
   const [disabledBtn, setDisabledBtn] = useState(false);
   const [activeStep, setActiveStep] = useState(1);
 
   const { account } = useEthers();
-  const isTxConfirmed = useIsTxConfirmed([
-    walletAddress && walletAddress,
-    txIndex && txIndex,
-    account && account?.toString(),
-  ]);
+  const signer = useGetSigner();
+  const approvedTxOwnerList = useGetOwnersApprovedTx(signer, walletAddress, transaction?.safeTxHash);
 
   useEffect(() => {
-    if (transaction?.executed === true) {
+    if (transaction?.isExecuted === true) {
       setActiveStep(4);
-    } else if (
-      parseInt(transaction?.numConfirmations) >= confirmationsRequired
-    ) {
+    } else if (parseInt(transaction?.confirmations?.length) >= confirmationsRequired) {
       setActiveStep(3);
     } else {
       setActiveStep(1);
     }
-  }, [transaction?.numConfirmations]);
+  }, [transaction?.confirmations?.length]);
 
-  const { state: rejectConfirmationState, send: reject } = useContractFunction(
-    contract,
-    "revokeConfirmation"
-  );
+  const { state: rejectConfirmationState, send: reject } = useContractFunction(contract, "revokeConfirmation");
 
-  const { state: confirmTxState, send: confirmTx } = useContractFunction(
-    contract,
-    "confirmTransaction"
-  );
+  const { state: confirmTxState, send: confirmTx } = useContractFunction(contract, "confirmTransaction");
 
-  const { state: executeTxState, send: executeTx } = useContractFunction(
-    contract,
-    "executeTransaction"
-  );
+  const { state: executeTxState, send: executeTx } = useContractFunction(contract, "executeTransaction");
 
   const executeTransaction = () => {
     setDisabledBtn(true);
-    executeTx(account, walletId, txIndex);
+    // executeTx(account, walletId, txIndex);
   };
 
   const confirmTransaction = () => {
     setDisabledBtn(true);
-    confirmTx(account, walletId, txIndex);
+    // confirmTx(account, walletId, txIndex);
   };
 
   const rejectConfirmation = () => {
     setDisabledBtn(true);
-    reject(account, walletId, txIndex);
+    // reject(account, walletId, txIndex);
   };
 
   useEffect(() => {
@@ -155,12 +133,9 @@ const TransactionProgressStepper: React.FC<Props> = ({
         break;
       case "Success":
         toast.dismiss(loadingToast);
-        successToast = toast.success(
-          "A Transaction has been successfully Executed! ",
-          {
-            duration: 5000,
-          }
-        );
+        successToast = toast.success("A Transaction has been successfully Executed! ", {
+          duration: 5000,
+        });
         setDisabledBtn(false);
         setTimeout(() => {
           toast.dismiss(successToast);
@@ -198,12 +173,9 @@ const TransactionProgressStepper: React.FC<Props> = ({
         break;
       case "Success":
         toast.dismiss(loadingToast);
-        successToast = toast.success(
-          "A Transaction has been successfully Confirmed! ",
-          {
-            duration: 5000,
-          }
-        );
+        successToast = toast.success("A Transaction has been successfully Confirmed! ", {
+          duration: 5000,
+        });
         setDisabledBtn(false);
         setTimeout(() => {
           toast.dismiss(successToast);
@@ -241,12 +213,9 @@ const TransactionProgressStepper: React.FC<Props> = ({
         break;
       case "Success":
         toast.dismiss(loadingToast);
-        successToast = toast.success(
-          "A confirmation has been successfully rejected! ",
-          {
-            duration: 5000,
-          }
-        );
+        successToast = toast.success("A confirmation has been successfully rejected! ", {
+          duration: 5000,
+        });
         setDisabledBtn(false);
         setTimeout(() => {
           toast.dismiss(successToast);
@@ -272,21 +241,17 @@ const TransactionProgressStepper: React.FC<Props> = ({
   }, [rejectConfirmationState]);
 
   const steps = [
-    "Created",
+    transaction?.transfers?.length > 0 ? "Created" : "On-chain rejection created",
     <Typography key="second" variant="body2">
-      Confimations ({parseInt(transaction?.numConfirmations)} of{" "}
-      {confirmationsRequired})
+      Confimations ({parseInt(transaction?.confirmations?.length)} of {confirmationsRequired})
     </Typography>,
     <AccountAvatar key="third" toAddress={transaction?.to} truncate={true} />,
     "Executed",
   ];
+
   return (
     <Stack width="100%">
-      <Stepper
-        orientation="vertical"
-        activeStep={activeStep}
-        connector={<QontoConnector />}
-      >
+      <Stepper orientation="vertical" activeStep={activeStep} connector={<QontoConnector />}>
         {steps.map((label, index) => (
           <Step key={index}>
             <StepLabel sx={styles.stepLabel} StepIconComponent={QontoStepIcon}>
@@ -296,9 +261,9 @@ const TransactionProgressStepper: React.FC<Props> = ({
         ))}
       </Stepper>
 
-      {transaction?.executed === false && (
+      {transaction?.isExecuted === false && (
         <Box sx={styles.buttonContainer}>
-          {parseInt(transaction?.numConfirmations) >= confirmationsRequired ? (
+          {transaction?.confirmations?.length >= confirmationsRequired ? (
             <Button
               variant="contained"
               color="primary"
@@ -313,7 +278,7 @@ const TransactionProgressStepper: React.FC<Props> = ({
               variant="contained"
               color="primary"
               sx={styles.actionsButton}
-              disabled={isTxConfirmed?.[0] || disabledBtn}
+              disabled={(account && approvedTxOwnerList?.includes(account)) || disabledBtn}
               onClick={() => confirmTransaction()}
             >
               Confirm

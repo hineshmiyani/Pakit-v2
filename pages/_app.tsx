@@ -1,8 +1,10 @@
 import type { AppProps } from "next/app";
-import { StyledEngineProvider, ThemeProvider } from "@mui/material";
-import { Mainnet, DAppProvider, Config, Goerli } from "@usedapp/core";
+
 import { getDefaultProvider } from "ethers";
 import { Toaster } from "react-hot-toast";
+import { StyledEngineProvider, ThemeProvider } from "@mui/material";
+import { Mainnet, DAppProvider, Config, Goerli } from "@usedapp/core";
+
 import { theme } from "../theme";
 import { Layout } from "../components";
 import "../styles/globals.css";
