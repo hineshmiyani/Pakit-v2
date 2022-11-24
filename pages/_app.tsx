@@ -30,6 +30,7 @@ function MyApp({ Component, pageProps }: AppProps) {
                   style: {
                     maxWidth: "1000px",
                     width: "auto",
+                    overflow: "hidden",
                   },
                 }}
               />

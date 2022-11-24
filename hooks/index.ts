@@ -13,7 +13,6 @@ import {
   TokenInfoListResponse,
 } from "@gnosis.pm/safe-service-client";
 
-import { contract } from "../constants";
 import { createEthersAdapter, safeServiceClient } from "../services";
 import { useRouter } from "next/router";
 
