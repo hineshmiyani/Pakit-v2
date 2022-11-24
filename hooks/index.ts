@@ -16,6 +16,7 @@ import {
 
 import { contract } from "../constants";
 import { createEthersAdapter, safeServiceClient } from "../services";
+import { useRouter } from "next/router";
 
 // export function useGetOwners(args: any[]) {
 //   const { value, error } =
@@ -289,20 +290,25 @@ export function useGetWalletBalance(signer: JsonRpcSigner | undefined, walletAdd
  * Get Multisig Wallet All Token ETH Balance
  */
 export function useGetTotalBalance(signer: JsonRpcSigner | undefined, walletAddress: string | string[] | undefined) {
-  const [balance, setBalance] = useState<number>();
+  const router = useRouter();
+  const [balance, setBalance] = useState<number>(0);
+  const [tokensBalance, setTokensBalance] = useState<SafeBalanceUsdResponse[]>();
+
+  const getTokenBalance = async () => {
+    if (!walletAddress || Array.isArray(walletAddress) || !signer) return;
+
+    const safeService = safeServiceClient(signer);
+    const usdBalances: SafeBalanceUsdResponse[] = await safeService.getUsdBalances(walletAddress);
+    console.log("usdBalances", usdBalances);
+    setTokensBalance(usdBalances);
+    setBalance(() => usdBalances?.reduce((prev, token) => prev + parseFloat(token?.fiatBalance), 0));
+  };
 
   useEffect(() => {
-    if (!walletAddress || Array.isArray(walletAddress) || !signer) return;
-    // IIFE
-    (async () => {
-      const safeService = safeServiceClient(signer);
-      const usdBalances: SafeBalanceUsdResponse[] = await safeService.getUsdBalances(walletAddress);
-      console.log("usdBalances", usdBalances);
-      setBalance(() => usdBalances?.reduce((prev, token) => prev + parseFloat(token?.fiatBalance), 0));
-    })();
-  }, [signer, walletAddress]);
+    getTokenBalance();
+  }, [signer, walletAddress, router?.asPath]);
 
-  return balance;
+  return { balance, tokensBalance, refetch: () => getTokenBalance() };
 }
 
 /**
@@ -372,18 +378,20 @@ export function useGetTxInfo(signer: JsonRpcSigner | undefined, safeTxHash: stri
 export function useGetPendingTxs(signer: JsonRpcSigner | undefined, walletAddress: string | string[] | undefined) {
   const [pendingTxs, setPendingTxs] = useState<SafeMultisigTransactionListResponse>();
 
-  useEffect(() => {
+  const getPendingTxs = async () => {
     if (!walletAddress || Array.isArray(walletAddress) || !signer) return;
-    // IIFE
-    (async () => {
-      const safeService = safeServiceClient(signer);
-      const pendingTxs: SafeMultisigTransactionListResponse = await safeService.getPendingTransactions(walletAddress);
-      console.log("pendingTxs ---- ", pendingTxs);
-      setPendingTxs(pendingTxs);
-    })();
+
+    const safeService = safeServiceClient(signer);
+    const pendingTxs: SafeMultisigTransactionListResponse = await safeService.getPendingTransactions(walletAddress);
+    console.log("pendingTxs ---- ", pendingTxs);
+    setPendingTxs(pendingTxs);
+  };
+
+  useEffect(() => {
+    getPendingTxs();
   }, [signer, walletAddress]);
 
-  return pendingTxs?.results;
+  return { results: pendingTxs?.results, refetch: () => getPendingTxs() };
 }
 
 /**
@@ -392,18 +400,20 @@ export function useGetPendingTxs(signer: JsonRpcSigner | undefined, walletAddres
 export function useGetAllTxs(signer: JsonRpcSigner | undefined, walletAddress: string | string[] | undefined) {
   const [allTxs, setAllTxs] = useState<AllTransactionsListResponse>();
 
-  useEffect(() => {
+  const getAllTxs = async () => {
     if (!walletAddress || Array.isArray(walletAddress) || !signer) return;
-    // IIFE
-    (async () => {
-      const safeService = safeServiceClient(signer);
-      const allTxs: AllTransactionsListResponse = await safeService.getAllTransactions(walletAddress);
-      console.log("allTxs ---- ", allTxs);
-      setAllTxs(allTxs);
-    })();
+
+    const safeService = safeServiceClient(signer);
+    const allTxs: AllTransactionsListResponse = await safeService.getAllTransactions(walletAddress);
+    console.log("allTxs ---- ", allTxs);
+    setAllTxs(allTxs);
+  };
+
+  useEffect(() => {
+    getAllTxs();
   }, [signer, walletAddress]);
 
-  return allTxs?.results;
+  return { results: allTxs?.results, refetch: () => getAllTxs() };
 }
 
 /**
@@ -440,17 +450,19 @@ export function useGetOwnersApprovedTx(
 ) {
   const [ownerAddresses, setOwnerAddresses] = useState<string[]>();
 
-  useEffect(() => {
+  const getOwnersWhoApprovedTxHash = async () => {
     if (!walletAddress || Array.isArray(walletAddress) || !signer || !txHash) return;
-    // IIFE
-    (async () => {
-      const ethAdapter = createEthersAdapter(signer);
-      const safeSdk = await Safe.create({ ethAdapter, safeAddress: walletAddress });
-      const ownerAddresses = await safeSdk.getOwnersWhoApprovedTx(txHash);
-      console.log("approvedTxOwnerList ", ownerAddresses);
-      setOwnerAddresses(ownerAddresses);
-    })();
+
+    const ethAdapter = createEthersAdapter(signer);
+    const safeSdk = await Safe.create({ ethAdapter, safeAddress: walletAddress });
+    const ownerAddresses = await safeSdk.getOwnersWhoApprovedTx(txHash);
+    console.log("approvedTxOwnerList ", ownerAddresses);
+    setOwnerAddresses(ownerAddresses);
+  };
+
+  useEffect(() => {
+    getOwnersWhoApprovedTxHash();
   }, [signer, walletAddress, txHash]);
 
-  return ownerAddresses;
+  return { results: ownerAddresses, refetch: () => getOwnersWhoApprovedTxHash() };
 }

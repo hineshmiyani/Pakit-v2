@@ -15,7 +15,7 @@ const WalletDetails = () => {
 
   const { library } = useEthers();
   const signer = useGetSigner();
-  const balance = useGetTotalBalance(signer, walletAddress);
+  const { balance } = useGetTotalBalance(signer, walletAddress);
 
   return (
     <>

@@ -70,8 +70,8 @@ const Transactions = () => {
   const signer = useGetSigner();
 
   const confirmationsRequired = useNumConfirmationsRequired(signer, walletAddress);
-  const transactionsList = useGetAllTxs(signer, walletAddress);
-  const pendingTxList = useGetPendingTxs(signer, walletAddress);
+  const { results: transactionsList, refetch: getAllTxs } = useGetAllTxs(signer, walletAddress);
+  const { results: pendingTxList, refetch: getPendingTxs } = useGetPendingTxs(signer, walletAddress);
 
   return (
     <>
@@ -83,8 +83,8 @@ const Transactions = () => {
         <Box width="100%">
           <Box borderBottom={1} borderColor="divider">
             <Tabs value={value} onChange={handleChange} aria-label="tabs" sx={styles.tabsContainer}>
-              <Tab sx={styles.tab} label="Queue" {...a11yProps(0)} />
-              <Tab sx={styles.tab} label="Completed" {...a11yProps(1)} />
+              <Tab sx={styles.tab} label="Queue" {...a11yProps(0)} onClick={getPendingTxs} />
+              <Tab sx={styles.tab} label="Completed" {...a11yProps(1)} onClick={getAllTxs} />
             </Tabs>
           </Box>
 

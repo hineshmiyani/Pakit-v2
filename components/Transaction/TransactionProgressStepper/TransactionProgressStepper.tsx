@@ -18,7 +18,7 @@ import {
 } from "@mui/material";
 import { Check, CircleOutlined } from "@mui/icons-material";
 
-import { useGetOwnersApprovedTx, useGetSigner } from "../../../hooks";
+import { useGetOwnersApprovedTx, useGetPendingTxs, useGetSigner } from "../../../hooks";
 import { confirmTx, executeTx, rejectTx } from "../../../services";
 import { AccountAvatar } from "../../index";
 import { styles } from "./styles";
@@ -81,10 +81,6 @@ type Props = {
   confirmationsRequired: number;
 };
 
-interface IError {
-  [key: string | number]: any;
-}
-
 const TransactionProgressStepper: React.FC<Props> = ({ transaction, confirmationsRequired }) => {
   const router = useRouter();
   const { walletAddress, id: walletId } = router.query;
@@ -93,7 +89,12 @@ const TransactionProgressStepper: React.FC<Props> = ({ transaction, confirmation
 
   const { account } = useEthers();
   const signer = useGetSigner();
-  const approvedTxOwnerList = useGetOwnersApprovedTx(signer, walletAddress, transaction?.safeTxHash);
+  const { refetch: getPendingTxs } = useGetPendingTxs(signer, walletAddress);
+  const { results: approvedTxOwnerList, refetch: getOwnersWhoApprovedTxHash } = useGetOwnersApprovedTx(
+    signer,
+    walletAddress,
+    transaction?.safeTxHash,
+  );
 
   useEffect(() => {
     if (transaction?.isExecuted === true) {
@@ -109,16 +110,20 @@ const TransactionProgressStepper: React.FC<Props> = ({ transaction, confirmation
 
   const executeTransaction = async () => {
     setDisabledBtn(true);
-    loadingToast = toast.loading("Please Confirm Transaction and waiting for executing...");
     if (!walletAddress || Array.isArray(walletAddress) || !signer || !transaction) return;
+    loadingToast = toast.loading("Please confirm the transaction and wait for its execution...");
 
     try {
       const execute = await executeTx(signer, walletAddress, transaction);
+      setTimeout(async () => {
+        await getPendingTxs();
+        await getOwnersWhoApprovedTxHash();
+      }, 2000);
       toast.dismiss(loadingToast);
-      successToast = toast.success("A Transaction has been successfully Executed! ", {
+      successToast = toast.success("A Transaction has been successfully executed! ", {
         duration: 5000,
       });
-    } catch (error: IError) {
+    } catch (error: any) {
       toast.dismiss(loadingToast);
       toast.error(error?.reason);
     }
@@ -127,34 +132,42 @@ const TransactionProgressStepper: React.FC<Props> = ({ transaction, confirmation
 
   const confirmTransaction = async () => {
     setDisabledBtn(true);
-    loadingToast = toast.loading("Please Confirm Transaction and waiting for executing...");
     if (!walletAddress || Array.isArray(walletAddress) || !signer || !transaction?.safeTxHash) return;
+    loadingToast = toast.loading("Please confirm the transaction and wait for its execution...");
 
     try {
       const confirm = await confirmTx(signer, walletAddress, transaction?.safeTxHash);
+      setTimeout(async () => {
+        await getPendingTxs();
+        await getOwnersWhoApprovedTxHash();
+      }, 2000);
       toast.dismiss(loadingToast);
-      successToast = toast.success("A Transaction has been successfully Executed! ", {
+      successToast = toast.success("A Transaction has been successfully executed! ", {
         duration: 5000,
       });
-    } catch (error: IError) {
+    } catch (error: any) {
       toast.dismiss(loadingToast);
       toast.error(error?.reason);
     }
     setDisabledBtn(false);
   };
 
-  const rejectConfirmation = () => {
+  const rejectConfirmation = async () => {
     setDisabledBtn(true);
-    loadingToast = toast.loading("Please Confirm Transaction and waiting for executing...");
     if (!walletAddress || Array.isArray(walletAddress) || !signer || !transaction?.nonce) return;
+    loadingToast = toast.loading("Please confirm the transaction and wait for its execution...");
 
     try {
-      const reject = rejectTx(signer, walletAddress, transaction?.nonce);
+      const reject = await rejectTx(signer, walletAddress, transaction?.nonce);
+      setTimeout(async () => {
+        await getPendingTxs();
+        await getOwnersWhoApprovedTxHash();
+      }, 2000);
       toast.dismiss(loadingToast);
-      successToast = toast.success("A Transaction has been successfully Executed! ", {
+      successToast = toast.success("A Transaction has been successfully executed! ", {
         duration: 5000,
       });
-    } catch (error: IError) {
+    } catch (error: any) {
       toast.dismiss(loadingToast);
       toast.error(error?.reason);
     }

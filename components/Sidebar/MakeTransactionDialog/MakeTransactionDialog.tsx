@@ -24,7 +24,7 @@ import { TollRounded, Close, ContentCopyRounded, CallMade } from "@mui/icons-mat
 import { SafeTransactionDataPartial } from "@gnosis.pm/safe-core-sdk-types";
 
 import { createNewTransaction } from "../../../services";
-import { useGetOwnersApprovedTx, useGetSigner, useGetTxInfo, useGetPendingTxs, useGetAllTxs } from "../../../hooks";
+import { useGetSigner } from "../../../hooks";
 import { contract } from "../../../constants";
 import { ShareIcon } from "../../index";
 import { styles } from "./styles";
@@ -95,16 +95,36 @@ const MakeTransactionDialog: React.FC<Props> = ({ children, walletAddress }) => 
       });
   };
 
+  let loadingToast, successToast: any;
   const sendFund = async () => {
     setDisabledBtn(true);
     if (!walletAddress || Array.isArray(walletAddress) || !signer || !recipientAddress) return;
+    loadingToast = toast.loading("Please confirm the transaction and wait for its execution...");
 
     const safeTransactionData: SafeTransactionDataPartial = {
       to: recipientAddress,
       value: parseEther(sendAmount?.toString()).toString(),
       data: "0x00",
     };
-    const createTx = await createNewTransaction(signer, walletAddress, safeTransactionData);
+
+    try {
+      const createTx = await createNewTransaction(signer, walletAddress, safeTransactionData);
+      toast.dismiss(loadingToast);
+      successToast = toast.success("A Transaction has been successfully executed! ", {
+        duration: 5000,
+      });
+      setTimeout(() => {
+        toast.dismiss(successToast);
+        router.push({
+          pathname: `/dashboard/${walletAddress}/transactions`,
+          query: { id: walletId },
+        });
+      }, 6000);
+      handleClose();
+    } catch (error: any) {
+      toast.dismiss(loadingToast);
+      toast.error(error?.reason);
+    }
 
     setDisabledBtn(false);
   };

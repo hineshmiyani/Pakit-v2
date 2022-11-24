@@ -28,7 +28,7 @@ function MyApp({ Component, pageProps }: AppProps) {
               <Toaster
                 toastOptions={{
                   style: {
-                    maxWidth: "500px",
+                    maxWidth: "1000px",
                     width: "auto",
                   },
                 }}

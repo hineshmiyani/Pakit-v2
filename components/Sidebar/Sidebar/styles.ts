@@ -26,7 +26,7 @@ export const styles: IStyles = {
     },
   },
   addWalletText: { color: "primary.main", fontWeight: "500", ml: 1 },
-  iconButton: { backgroundColor: "secondary.contrastText" },
+  iconButton: { backgroundColor: "grey.200" },
   copyIcon: { color: "disabled.main", fontSize: "20px" },
   balanceText: {
     color: "primary.main",
@@ -34,15 +34,14 @@ export const styles: IStyles = {
     fontWeight: "500",
   },
   actionsButton: {
-    backgroundColor: "primary.buttonColor",
-    border: "1px solid",
     borderColor: "primary.buttonColor",
-    color: "primary.contrastText",
+    color: "primary.buttonColor",
     p: "8px 12px",
     width: "145px",
     transition: " all .2s ease-in-out",
     "&:hover": {
-      backgroundColor: "primary.buttonColor",
+      backgroundColor: "primary.contrastText",
+      borderColor: "primary.buttonColor",
       transform: "scale(1.05)",
     },
   },
