@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import { utils } from "ethers";
-import { formatEther, parseEther } from "@ethersproject/units";
-import { useContractFunction, useEtherBalance, useEthers } from "@usedapp/core";
+import { formatEther, parseEther, parseUnits } from "@ethersproject/units";
+import { useContractFunction, useEtherBalance, useEthers, useTokenBalance } from "@usedapp/core";
 import toast from "react-hot-toast";
 import {
   Box,
@@ -19,12 +19,16 @@ import {
   Tooltip,
   Divider,
   TextField,
+  MenuItem,
+  Select,
+  SelectChangeEvent,
 } from "@mui/material";
 import { TollRounded, Close, ContentCopyRounded, CallMade } from "@mui/icons-material";
 import { SafeTransactionDataPartial } from "@gnosis.pm/safe-core-sdk-types";
+import { SafeBalanceUsdResponse } from "@gnosis.pm/safe-service-client";
 
-import { createNewTransaction } from "../../../services";
-import { useGetSigner } from "../../../hooks";
+import { createNewTransaction, encodeERC20TokenTransferData } from "../../../services";
+import { useGetSigner, useGetTotalBalance } from "../../../hooks";
 import { contract } from "../../../constants";
 import { ShareIcon } from "../../index";
 import { styles } from "./styles";
@@ -77,35 +81,58 @@ const MakeTransactionDialog: React.FC<Props> = ({ children, walletAddress }) => 
   const [showDialogStep, setShowDialogStep] = useState<string>(DialogStep.CHOOSE_TRANSACTION);
   const [depositAmount, setDepositAmount] = useState<number>(0);
   const [sendAmount, setSendAmount] = useState<number>(0);
+  const [selectToken, setSelectToken] = useState<string>("Ether");
+
   const [recipientAddress, setRecipientAddress] = useState<string>("");
 
   const { account, library } = useEthers();
   const signer = useGetSigner();
 
+  const { tokensBalance: tokensList } = useGetTotalBalance(signer, walletAddress);
   const accountBalance = useEtherBalance(account?.toString());
   const walletBalance: any = useEtherBalance(walletAddress);
-  const { state: depositTxState, send: deposit } = useContractFunction(contract, "deposit");
 
-  const depositEther = () => {
-    setDisabledBtn(true);
-    depositAmount !== 0 &&
-      walletId &&
-      deposit(account, +walletId, {
-        value: utils.parseEther(depositAmount.toString()),
-      });
+  const handleChange = (event: SelectChangeEvent) => {
+    setSelectToken(event.target.value.toString());
   };
+
+  // const depositEther = () => {
+  //   setDisabledBtn(true);
+  //   depositAmount !== 0 &&
+  //     walletId &&
+  //     deposit(account, +walletId, {
+  //       value: utils.parseEther(depositAmount.toString()),
+  //     });
+  // };
 
   let loadingToast, successToast: any;
   const sendFund = async () => {
     setDisabledBtn(true);
-    if (!walletAddress || Array.isArray(walletAddress) || !signer || !recipientAddress) return;
+    if (!walletAddress || Array.isArray(walletAddress) || !signer || !recipientAddress || !selectToken) return;
     loadingToast = toast.loading("Please confirm the transaction and wait for its execution...");
 
-    const safeTransactionData: SafeTransactionDataPartial = {
-      to: recipientAddress,
-      value: parseEther(sendAmount?.toString()).toString(),
-      data: "0x00",
-    };
+    let safeTransactionData: SafeTransactionDataPartial;
+    if (selectToken === "Ether") {
+      //* Transfer Ether
+      safeTransactionData = {
+        to: recipientAddress,
+        value: parseEther(sendAmount?.toString()).toString(),
+        data: "0x00",
+      };
+    } else {
+      //* Find ERC20 Token from Token List
+      const ERC20Token =
+        tokensList && tokensList?.find((token: SafeBalanceUsdResponse) => token?.token?.name === selectToken);
+      const value = parseUnits(sendAmount?.toString(), ERC20Token?.token?.decimals);
+
+      //* Transfer ERC20
+      if (!ERC20Token) return;
+      safeTransactionData = {
+        to: ERC20Token?.tokenAddress,
+        value: "0",
+        data: encodeERC20TokenTransferData(recipientAddress, value.toString()),
+      };
+    }
 
     try {
       const createTx = await createNewTransaction(signer, walletAddress, safeTransactionData);
@@ -123,97 +150,13 @@ const MakeTransactionDialog: React.FC<Props> = ({ children, walletAddress }) => 
       handleClose();
     } catch (error: any) {
       toast.dismiss(loadingToast);
-      toast.error(error?.reason);
+      toast.error(error?.reason, {
+        duration: 5000,
+      });
     }
 
     setDisabledBtn(false);
   };
-
-  // useEffect(() => {
-  //   console.log({ submitTxState });
-  //   let loadingToast, confirmTxWallet, successToast: any;
-  //   switch (submitTxState?.status) {
-  //     case "PendingSignature":
-  //       confirmTxWallet = toast.loading("Please Confirm Transaction...");
-  //       break;
-  //     case "Mining":
-  //       toast.dismiss(confirmTxWallet);
-  //       loadingToast = toast.loading("Submitting Transaction...");
-  //       break;
-  //     case "Success":
-  //       toast.dismiss(loadingToast);
-  //       successToast = toast.success("Transaction has been successfully submitted! ", {
-  //         duration: 5000,
-  //       });
-  //       setDisabledBtn(false);
-  //       setTimeout(() => {
-  //         toast.dismiss(successToast);
-  //         router.push({
-  //           pathname: `/dashboard/${walletAddress}/transactions`,
-  //           query: { id: walletId },
-  //         });
-  //       }, 6000);
-  //       handleClose();
-  //       break;
-  //     case "Exception":
-  //       toast.dismiss(loadingToast);
-  //       toast.error(submitTxState?.errorMessage || "", {
-  //         duration: 5000,
-  //       });
-  //       setDisabledBtn(false);
-  //       break;
-  //     case "Fail":
-  //       toast.dismiss(loadingToast);
-  //       toast.error(submitTxState?.errorMessage || "", {
-  //         duration: 5000,
-  //       });
-  //       setDisabledBtn(false);
-  //       break;
-  //     default:
-  //       break;
-  //   }
-  // }, [submitTxState]);
-
-  useEffect(() => {
-    console.log({ depositTxState });
-    let loadingToast, confirmTxWallet, successToast: any;
-    switch (depositTxState?.status) {
-      case "PendingSignature":
-        confirmTxWallet = toast.loading("Please Confirm Transaction...");
-        break;
-      case "Mining":
-        toast.dismiss(confirmTxWallet);
-        loadingToast = toast.loading("Adding Fund...");
-        break;
-      case "Success":
-        toast.dismiss(loadingToast);
-        successToast = toast.success("Ether has been successfully deposited! ", {
-          duration: 5000,
-        });
-        setDisabledBtn(false);
-        setTimeout(() => {
-          toast.dismiss(successToast);
-        }, 6000);
-        handleClose();
-        break;
-      case "Exception":
-        toast.dismiss(loadingToast);
-        toast.error(depositTxState?.errorMessage || "", {
-          duration: 5000,
-        });
-        setDisabledBtn(false);
-        break;
-      case "Fail":
-        toast.dismiss(loadingToast);
-        toast.error(depositTxState?.errorMessage || "", {
-          duration: 5000,
-        });
-        setDisabledBtn(false);
-        break;
-      default:
-        break;
-    }
-  }, [depositTxState]);
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -241,13 +184,13 @@ const MakeTransactionDialog: React.FC<Props> = ({ children, walletAddress }) => 
           {/* DialogStep -> CHOOSE_TRANSACTION */}
           {showDialogStep === DialogStep.CHOOSE_TRANSACTION && (
             <Stack alignItems="center" m="30px" spacing={4}>
-              <Button
+              {/* <Button
                 startIcon={<TollRounded sx={{ fontSize: "24px !important" }} />}
                 sx={styles.button}
                 onClick={() => setShowDialogStep(DialogStep.DEPOSIT_FUNDS)}
               >
                 Deposit Funds
-              </Button>
+              </Button> */}
               <Button
                 startIcon={<CallMade sx={{ fontSize: "24px !important" }} />}
                 sx={styles.button}
@@ -431,6 +374,34 @@ const MakeTransactionDialog: React.FC<Props> = ({ children, walletAddress }) => 
                 />
 
                 <Typography variant="body2" component="p" my={1}>
+                  Select an asset *
+                </Typography>
+                <Select value={selectToken} onChange={handleChange} color="error" sx={{ width: "100%" }}>
+                  {tokensList &&
+                    tokensList?.map((token: SafeBalanceUsdResponse, index) => (
+                      <MenuItem key={index} value={token?.token?.name ?? "Ether"}>
+                        <Stack direction="row" spacing={1}>
+                          <img
+                            src={token?.token?.logoUri ?? "/asset/images/ethLogo.png"}
+                            width="24"
+                            height="24"
+                            alt=""
+                            className="rounded-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = "/asset/images/token-placeholder.svg";
+                              (e.target as HTMLImageElement).srcset = "/asset/images/token-placeholder.svg";
+                            }}
+                          />
+                          <Typography>{token?.token?.name ?? "Ether"}</Typography>
+                          <Typography>
+                            ({formatEther(token?.balance)} {token?.token?.symbol ?? "Ether"})
+                          </Typography>
+                        </Stack>
+                      </MenuItem>
+                    ))}
+                </Select>
+
+                <Typography variant="body2" component="p" my={1}>
                   Amount *
                 </Typography>
                 <TextField
@@ -455,7 +426,7 @@ const MakeTransactionDialog: React.FC<Props> = ({ children, walletAddress }) => 
         </DialogContent>
 
         {/* DialogStep -> DEPOSIT_FUNDS */}
-        {showDialogStep === DialogStep.DEPOSIT_FUNDS && (
+        {/* {showDialogStep === DialogStep.DEPOSIT_FUNDS && (
           <DialogActions sx={styles.dialogActions}>
             <>
               <Button sx={styles.cancelButton} onClick={handleClose}>
@@ -470,7 +441,7 @@ const MakeTransactionDialog: React.FC<Props> = ({ children, walletAddress }) => 
               </Button>
             </>
           </DialogActions>
-        )}
+        )} */}
 
         {/* DialogStep -> SEND_FUNDS  */}
         {showDialogStep === DialogStep.SEND_FUNDS && (

@@ -1,5 +1,6 @@
 import { ethers } from "ethers";
 import { JsonRpcSigner } from "@ethersproject/providers";
+import { Interface } from "@ethersproject/abi";
 import EthersAdapter from "@gnosis.pm/safe-ethers-lib";
 import { SafeTransactionDataPartial } from "@gnosis.pm/safe-core-sdk-types";
 import Safe, { SafeFactory, type DeploySafeProps } from "@gnosis.pm/safe-core-sdk";
@@ -135,4 +136,13 @@ export const executeTx = async (signer: JsonRpcSigner, walletAddress: string, tx
   const executeTxResponse = await safeSdk.executeTransaction(modifiedTx);
   await executeTxResponse.transactionResponse?.wait();
   console.log({ executeTxResponse });
+};
+
+/**
+ * ERC20 Token Transfer Data
+ */
+export const encodeERC20TokenTransferData = (to: string, value: string): string => {
+  const erc20Abi = ["function transfer(address to, uint256 value)"];
+  const contractInterface = new Interface(erc20Abi);
+  return contractInterface.encodeFunctionData("transfer", [to, value]);
 };

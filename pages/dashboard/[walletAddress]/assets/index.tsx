@@ -131,31 +131,29 @@ const Assets = () => {
           </Box>
 
           <TabPanel value={value} index={0}>
-            <Box>Token</Box>
+            <Paper elevation={0} sx={styles.container}>
+              <Box sx={styles.datagridContainer}>
+                {rows?.length > 0 ? (
+                  <DataGrid
+                    rows={rows}
+                    columns={columns}
+                    pageSize={3}
+                    rowsPerPageOptions={[3]}
+                    disableSelectionOnClick
+                    disableColumnSelector
+                  />
+                ) : (
+                  <Stack spacing={0.8} p={0.5}>
+                    {Array(5)
+                      .fill(null)
+                      .map((_, index) => (
+                        <Skeleton key={index} variant="rounded" width="100%" height={46} />
+                      ))}
+                  </Stack>
+                )}
+              </Box>
+            </Paper>
           </TabPanel>
-
-          <Paper elevation={0} sx={styles.container}>
-            <Box sx={styles.datagridContainer}>
-              {rows?.length > 0 ? (
-                <DataGrid
-                  rows={rows}
-                  columns={columns}
-                  pageSize={3}
-                  rowsPerPageOptions={[3]}
-                  disableSelectionOnClick
-                  disableColumnSelector
-                />
-              ) : (
-                <Stack spacing={0.8} p={0.5}>
-                  {Array(5)
-                    .fill(null)
-                    .map((_, index) => (
-                      <Skeleton key={index} variant="rounded" width="100%" height={46} />
-                    ))}
-                </Stack>
-              )}
-            </Box>
-          </Paper>
         </Box>
       </Container>
     </>
