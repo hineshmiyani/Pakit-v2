@@ -79,13 +79,15 @@ const QontoStepIcon = (props: StepIconProps) => {
 type Props = {
   transaction: any;
   confirmationsRequired: number;
+  getTxs?: () => Promise<void>;
 };
 
-const TransactionProgressStepper: React.FC<Props> = ({ transaction, confirmationsRequired }) => {
+const TransactionProgressStepper: React.FC<Props> = ({ transaction, confirmationsRequired, getTxs }) => {
   const router = useRouter();
   const { walletAddress, id: walletId } = router.query;
   const [disabledBtn, setDisabledBtn] = useState(false);
   const [activeStep, setActiveStep] = useState(1);
+  const [isTxExecuted, setIsTxExecuted] = useState(false);
 
   const { account } = useEthers();
   const signer = useGetSigner();
@@ -106,10 +108,19 @@ const TransactionProgressStepper: React.FC<Props> = ({ transaction, confirmation
     }
   }, [transaction?.confirmations?.length]);
 
+  useEffect(() => {
+    setTimeout(async () => {
+      await getOwnersWhoApprovedTxHash();
+      await getPendingTxs();
+      getTxs && (await getTxs());
+    }, 5000);
+  }, [isTxExecuted]);
+
   let loadingToast, successToast: any;
 
   const executeTransaction = async () => {
     setDisabledBtn(true);
+    setIsTxExecuted(false);
     if (!walletAddress || Array.isArray(walletAddress) || !signer || !transaction) return;
     loadingToast = toast.loading("Please confirm the transaction and wait for its execution...");
 
@@ -119,28 +130,22 @@ const TransactionProgressStepper: React.FC<Props> = ({ transaction, confirmation
       successToast = toast.success("A Transaction has been successfully executed! ", {
         duration: 5000,
       });
-      setTimeout(async () => {
-        await getPendingTxs();
-        await getOwnersWhoApprovedTxHash();
-      }, 7000);
     } catch (error: any) {
       toast.dismiss(loadingToast);
       toast.error(error?.reason);
     }
+    await setIsTxExecuted(true);
     await setDisabledBtn(false);
   };
 
   const confirmTransaction = async () => {
     setDisabledBtn(true);
+    setIsTxExecuted(false);
     if (!walletAddress || Array.isArray(walletAddress) || !signer || !transaction?.safeTxHash) return;
     loadingToast = toast.loading("Please confirm the transaction and wait for its execution...");
 
     try {
       const confirm = await confirmTx(signer, walletAddress, transaction?.safeTxHash);
-      setTimeout(async () => {
-        await getPendingTxs();
-        await getOwnersWhoApprovedTxHash();
-      }, 5000);
       toast.dismiss(loadingToast);
       successToast = toast.success("A Transaction has been successfully executed! ", {
         duration: 5000,
@@ -149,35 +154,36 @@ const TransactionProgressStepper: React.FC<Props> = ({ transaction, confirmation
       toast.dismiss(loadingToast);
       toast.error(error?.reason);
     }
+    await setIsTxExecuted(true);
     await setDisabledBtn(false);
   };
 
-  const rejectConfirmation = async () => {
-    setDisabledBtn(true);
-    if (!walletAddress || Array.isArray(walletAddress) || !signer || !transaction?.nonce) return;
-    loadingToast = toast.loading("Please confirm the transaction and wait for its execution...");
+  // const rejectConfirmation = async () => {
+  //   setDisabledBtn(true);
+  //   if (!walletAddress || Array.isArray(walletAddress) || !signer || !transaction?.nonce) return;
+  //   loadingToast = toast.loading("Please confirm the transaction and wait for its execution...");
 
-    try {
-      const reject = await rejectTx(signer, walletAddress, transaction?.nonce);
-      toast.dismiss(loadingToast);
-      successToast = toast.success("A Transaction has been successfully executed! ", {
-        duration: 5000,
-      });
-      setTimeout(async () => {
-        await getPendingTxs();
-        await getOwnersWhoApprovedTxHash();
-      }, 7000);
-    } catch (error: any) {
-      toast.dismiss(loadingToast);
-      toast.error(error?.reason);
-    }
-    await setDisabledBtn(false);
-  };
+  //   try {
+  //     const reject = await rejectTx(signer, walletAddress, transaction?.nonce);
+  //     toast.dismiss(loadingToast);
+  //     successToast = toast.success("A Transaction has been successfully executed! ", {
+  //       duration: 5000,
+  //     });
+  //     setTimeout(async () => {
+  //       await getPendingTxs();
+  //       await getOwnersWhoApprovedTxHash();
+  //     }, 7000);
+  //   } catch (error: any) {
+  //     toast.dismiss(loadingToast);
+  //     toast.error(error?.reason);
+  //   }
+  //   await setDisabledBtn(false);
+  // };
 
   const steps = [
     !transaction?.isExecuted || transaction?.transfers?.length > 0 ? "Created" : "On-chain rejection created",
     <Typography key="second" variant="body2">
-      Confimations ({parseInt(transaction?.confirmations?.length)} of {confirmationsRequired})
+      Confimations ({approvedTxOwnerList && approvedTxOwnerList?.length} of {confirmationsRequired})
     </Typography>,
     <AccountAvatar key="third" toAddress={transaction?.to} truncate={true} />,
     "Executed",
@@ -197,7 +203,7 @@ const TransactionProgressStepper: React.FC<Props> = ({ transaction, confirmation
 
       {transaction?.isExecuted === false && (
         <Box sx={styles.buttonContainer}>
-          {transaction?.confirmations?.length >= confirmationsRequired ? (
+          {approvedTxOwnerList && approvedTxOwnerList.length >= confirmationsRequired ? (
             <Button
               variant="contained"
               color="primary"
@@ -219,14 +225,14 @@ const TransactionProgressStepper: React.FC<Props> = ({ transaction, confirmation
             </Button>
           )}
 
-          <Button
+          {/* <Button
             variant="outlined"
             disabled={disabledBtn}
             sx={styles.rejectButton}
             onClick={() => rejectConfirmation()}
           >
             Reject
-          </Button>
+          </Button> */}
         </Box>
       )}
     </Stack>

@@ -14,17 +14,17 @@ export const styles: IStyles = {
       color: "primary.buttonColor",
       fontWeight: "600",
     },
-    "& .MuiStepLabel-label.Mui-active > *, .MuiStepLabel-label.Mui-completed > *":
-      {
-        fontWeight: "600",
-      },
+    "& .MuiStepLabel-label.Mui-active > *, .MuiStepLabel-label.Mui-completed > *": {
+      fontWeight: "600",
+    },
   },
   buttonContainer: {
     my: 2,
+    ml: 1,
     width: "90%",
     display: "flex",
     flexDirection: "row",
-    justifyContent: "center",
+    justifyContent: "left",
     gap: 1.5,
   },
   actionsButton: {

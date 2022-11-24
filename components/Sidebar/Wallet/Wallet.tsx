@@ -12,7 +12,7 @@ const Wallet: React.FC<Props> = ({ wallet, walletId }) => {
   const router = useRouter();
   const { walletAddress } = router?.query;
   const { library } = useEthers();
-  // const walletName = useGetWalletName([account?.toString(), +walletId]);
+
   return (
     <ListItem disablePadding>
       <ListItemButton

@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import { utils } from "ethers";
-import { formatEther, parseEther, parseUnits } from "@ethersproject/units";
-import { useContractFunction, useEtherBalance, useEthers, useTokenBalance } from "@usedapp/core";
+import { formatEther, parseEther, parseUnits, formatUnits } from "@ethersproject/units";
+import { useEtherBalance, useEthers, useTokenBalance } from "@usedapp/core";
 import toast from "react-hot-toast";
 import {
   Box,
@@ -29,7 +29,6 @@ import { SafeBalanceUsdResponse } from "@gnosis.pm/safe-service-client";
 
 import { createNewTransaction, encodeERC20TokenTransferData } from "../../../services";
 import { useGetSigner, useGetTotalBalance } from "../../../hooks";
-import { contract } from "../../../constants";
 import { ShareIcon } from "../../index";
 import { styles } from "./styles";
 
@@ -412,6 +411,18 @@ const MakeTransactionDialog: React.FC<Props> = ({ children, walletAddress }) => 
                   value={sendAmount}
                   onChange={(e) => {
                     setSendAmount(+e.target.value);
+                    // if (selectToken === "Ether" && walletBalance) {
+                    //   formatEther(walletBalance) < sendAmount ? setDisabledBtn(true) : setDisabledBtn(false);
+                    // }
+
+                    // if (selectToken !== "Ether") {
+                    //   const ERC20Token =
+                    //     tokensList &&
+                    //     tokensList?.find((token: SafeBalanceUsdResponse) => token?.token?.name === selectToken);
+                    //   ERC20Token && +formatUnits(ERC20Token?.balance, ERC20Token?.token?.decimals) < sendAmount
+                    //     ? setDisabledBtn(true)
+                    //     : setDisabledBtn(false);
+                    // }
                   }}
                   placeholder="Enter an amount*"
                   InputLabelProps={{ shrink: true }}

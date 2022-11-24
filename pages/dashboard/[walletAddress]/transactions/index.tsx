@@ -158,6 +158,7 @@ const Transactions = () => {
                               <TransactionProgressStepper
                                 transaction={transaction}
                                 confirmationsRequired={confirmationsRequired}
+                                getTxs={getPendingTxs}
                               />
                             </Box>
                           )}
