@@ -92,9 +92,6 @@ const Transactions = () => {
           <TabPanel value={value} index={0}>
             <Box>
               {pendingTxList?.map((transaction: any, index: number) => {
-                {
-                  console.log(`transaction ${index}`, "isExecuted" in transaction && transaction?.isExecuted === false);
-                }
                 if ("isExecuted" in transaction && transaction?.isExecuted === false) {
                   return (
                     <Accordion key={transaction?.to + index} sx={styles.accordionContainer}>
@@ -137,7 +134,9 @@ const Transactions = () => {
                           </Typography>
                         </Stack>
                       </AccordionSummary>
+
                       <Divider />
+
                       <AccordionDetails sx={{ pt: 2 }}>
                         <Box display="flex" alignItems="top" gap={3}>
                           <Box>

@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { useContractFunction, useEthers } from "@usedapp/core";
-import { styled } from "@mui/material/styles";
+
 import toast from "react-hot-toast";
+import { useEthers } from "@usedapp/core";
+import { styled } from "@mui/material/styles";
 import {
   Stack,
   Stepper,
@@ -16,9 +17,10 @@ import {
   Button,
 } from "@mui/material";
 import { Check, CircleOutlined } from "@mui/icons-material";
-import { AccountAvatar } from "../../index";
+
 import { useGetOwnersApprovedTx, useGetSigner } from "../../../hooks";
-import { contract } from "../../../constants";
+import { confirmTx, executeTx, rejectTx } from "../../../services";
+import { AccountAvatar } from "../../index";
 import { styles } from "./styles";
 
 const QontoConnector = styled(StepConnector)(({ theme }) => ({
@@ -79,6 +81,10 @@ type Props = {
   confirmationsRequired: number;
 };
 
+interface IError {
+  [key: string | number]: any;
+}
+
 const TransactionProgressStepper: React.FC<Props> = ({ transaction, confirmationsRequired }) => {
   const router = useRouter();
   const { walletAddress, id: walletId } = router.query;
@@ -99,149 +105,184 @@ const TransactionProgressStepper: React.FC<Props> = ({ transaction, confirmation
     }
   }, [transaction?.confirmations?.length]);
 
-  const { state: rejectConfirmationState, send: reject } = useContractFunction(contract, "revokeConfirmation");
+  let loadingToast, successToast: any;
 
-  const { state: confirmTxState, send: confirmTx } = useContractFunction(contract, "confirmTransaction");
-
-  const { state: executeTxState, send: executeTx } = useContractFunction(contract, "executeTransaction");
-
-  const executeTransaction = () => {
+  const executeTransaction = async () => {
     setDisabledBtn(true);
-    // executeTx(account, walletId, txIndex);
+    loadingToast = toast.loading("Please Confirm Transaction and waiting for executing...");
+    if (!walletAddress || Array.isArray(walletAddress) || !signer || !transaction) return;
+
+    try {
+      const execute = await executeTx(signer, walletAddress, transaction);
+      toast.dismiss(loadingToast);
+      successToast = toast.success("A Transaction has been successfully Executed! ", {
+        duration: 5000,
+      });
+    } catch (error: IError) {
+      toast.dismiss(loadingToast);
+      toast.error(error?.reason);
+    }
+    setDisabledBtn(false);
   };
 
-  const confirmTransaction = () => {
+  const confirmTransaction = async () => {
     setDisabledBtn(true);
-    // confirmTx(account, walletId, txIndex);
+    loadingToast = toast.loading("Please Confirm Transaction and waiting for executing...");
+    if (!walletAddress || Array.isArray(walletAddress) || !signer || !transaction?.safeTxHash) return;
+
+    try {
+      const confirm = await confirmTx(signer, walletAddress, transaction?.safeTxHash);
+      toast.dismiss(loadingToast);
+      successToast = toast.success("A Transaction has been successfully Executed! ", {
+        duration: 5000,
+      });
+    } catch (error: IError) {
+      toast.dismiss(loadingToast);
+      toast.error(error?.reason);
+    }
+    setDisabledBtn(false);
   };
 
   const rejectConfirmation = () => {
     setDisabledBtn(true);
-    // reject(account, walletId, txIndex);
+    loadingToast = toast.loading("Please Confirm Transaction and waiting for executing...");
+    if (!walletAddress || Array.isArray(walletAddress) || !signer || !transaction?.nonce) return;
+
+    try {
+      const reject = rejectTx(signer, walletAddress, transaction?.nonce);
+      toast.dismiss(loadingToast);
+      successToast = toast.success("A Transaction has been successfully Executed! ", {
+        duration: 5000,
+      });
+    } catch (error: IError) {
+      toast.dismiss(loadingToast);
+      toast.error(error?.reason);
+    }
+    setDisabledBtn(false);
   };
 
-  useEffect(() => {
-    console.log({ executeTxState });
-    let loadingToast, confirmTxWallet, successToast: any;
-    switch (executeTxState?.status) {
-      case "PendingSignature":
-        confirmTxWallet = toast.loading("Please Confirm Transaction...");
-        break;
-      case "Mining":
-        toast.dismiss(confirmTxWallet);
-        loadingToast = toast.loading("Executing Transaction...");
-        break;
-      case "Success":
-        toast.dismiss(loadingToast);
-        successToast = toast.success("A Transaction has been successfully Executed! ", {
-          duration: 5000,
-        });
-        setDisabledBtn(false);
-        setTimeout(() => {
-          toast.dismiss(successToast);
-        }, 6000);
-        break;
-      case "Exception":
-        toast.dismiss(loadingToast);
-        toast.error(executeTxState?.errorMessage || "", {
-          duration: 5000,
-        });
-        setDisabledBtn(false);
-        break;
-      case "Fail":
-        toast.dismiss(loadingToast);
-        toast.error(executeTxState?.errorMessage || "", {
-          duration: 5000,
-        });
-        setDisabledBtn(false);
-        break;
-      default:
-        break;
-    }
-  }, [executeTxState]);
+  // useEffect(() => {
+  //   console.log({ executeTxState });
+  //   let loadingToast, confirmTxWallet, successToast: any;
+  //   switch (executeTxState?.status) {
+  //     case "PendingSignature":
+  //       confirmTxWallet = toast.loading("Please Confirm Transaction...");
+  //       break;
+  //     case "Mining":
+  //       toast.dismiss(confirmTxWallet);
+  //       loadingToast = toast.loading("Executing Transaction...");
+  //       break;
+  //     case "Success":
+  //       toast.dismiss(loadingToast);
+  //       successToast = toast.success("A Transaction has been successfully Executed! ", {
+  //         duration: 5000,
+  //       });
+  //       setDisabledBtn(false);
+  //       setTimeout(() => {
+  //         toast.dismiss(successToast);
+  //       }, 6000);
+  //       break;
+  //     case "Exception":
+  //       toast.dismiss(loadingToast);
+  //       toast.error(executeTxState?.errorMessage || "", {
+  //         duration: 5000,
+  //       });
+  //       setDisabledBtn(false);
+  //       break;
+  //     case "Fail":
+  //       toast.dismiss(loadingToast);
+  //       toast.error(executeTxState?.errorMessage || "", {
+  //         duration: 5000,
+  //       });
+  //       setDisabledBtn(false);
+  //       break;
+  //     default:
+  //       break;
+  //   }
+  // }, [executeTxState]);
 
-  useEffect(() => {
-    console.log({ confirmTxState });
-    let loadingToast, confirmTxWallet, successToast: any;
-    switch (confirmTxState?.status) {
-      case "PendingSignature":
-        confirmTxWallet = toast.loading("Please Confirm Transaction...");
-        break;
-      case "Mining":
-        toast.dismiss(confirmTxWallet);
-        loadingToast = toast.loading("Confirming Transaction...");
-        break;
-      case "Success":
-        toast.dismiss(loadingToast);
-        successToast = toast.success("A Transaction has been successfully Confirmed! ", {
-          duration: 5000,
-        });
-        setDisabledBtn(false);
-        setTimeout(() => {
-          toast.dismiss(successToast);
-        }, 6000);
-        break;
-      case "Exception":
-        toast.dismiss(loadingToast);
-        toast.error(confirmTxState?.errorMessage || "", {
-          duration: 5000,
-        });
-        setDisabledBtn(false);
-        break;
-      case "Fail":
-        toast.dismiss(loadingToast);
-        toast.error(confirmTxState?.errorMessage || "", {
-          duration: 5000,
-        });
-        setDisabledBtn(false);
-        break;
-      default:
-        break;
-    }
-  }, [confirmTxState]);
+  // useEffect(() => {
+  //   console.log({ confirmTxState });
+  //   let loadingToast, confirmTxWallet, successToast: any;
+  //   switch (confirmTxState?.status) {
+  //     case "PendingSignature":
+  //       confirmTxWallet = toast.loading("Please Confirm Transaction...");
+  //       break;
+  //     case "Mining":
+  //       toast.dismiss(confirmTxWallet);
+  //       loadingToast = toast.loading("Confirming Transaction...");
+  //       break;
+  //     case "Success":
+  //       toast.dismiss(loadingToast);
+  //       successToast = toast.success("A Transaction has been successfully Confirmed! ", {
+  //         duration: 5000,
+  //       });
+  //       setDisabledBtn(false);
+  //       setTimeout(() => {
+  //         toast.dismiss(successToast);
+  //       }, 6000);
+  //       break;
+  //     case "Exception":
+  //       toast.dismiss(loadingToast);
+  //       toast.error(confirmTxState?.errorMessage || "", {
+  //         duration: 5000,
+  //       });
+  //       setDisabledBtn(false);
+  //       break;
+  //     case "Fail":
+  //       toast.dismiss(loadingToast);
+  //       toast.error(confirmTxState?.errorMessage || "", {
+  //         duration: 5000,
+  //       });
+  //       setDisabledBtn(false);
+  //       break;
+  //     default:
+  //       break;
+  //   }
+  // }, [confirmTxState]);
 
-  useEffect(() => {
-    console.log({ rejectConfirmationState });
-    let loadingToast, confirmTxWallet, successToast: any;
-    switch (rejectConfirmationState?.status) {
-      case "PendingSignature":
-        confirmTxWallet = toast.loading("Please Confirm Transaction...");
-        break;
-      case "Mining":
-        toast.dismiss(confirmTxWallet);
-        loadingToast = toast.loading("Rejecting Confirmation...");
-        break;
-      case "Success":
-        toast.dismiss(loadingToast);
-        successToast = toast.success("A confirmation has been successfully rejected! ", {
-          duration: 5000,
-        });
-        setDisabledBtn(false);
-        setTimeout(() => {
-          toast.dismiss(successToast);
-        }, 6000);
-        break;
-      case "Exception":
-        toast.dismiss(loadingToast);
-        toast.error(rejectConfirmationState?.errorMessage || "", {
-          duration: 5000,
-        });
-        setDisabledBtn(false);
-        break;
-      case "Fail":
-        toast.dismiss(loadingToast);
-        toast.error(rejectConfirmationState?.errorMessage || "", {
-          duration: 5000,
-        });
-        setDisabledBtn(false);
-        break;
-      default:
-        break;
-    }
-  }, [rejectConfirmationState]);
+  // useEffect(() => {
+  //   console.log({ rejectConfirmationState });
+  //   let loadingToast, confirmTxWallet, successToast: any;
+  //   switch (rejectConfirmationState?.status) {
+  //     case "PendingSignature":
+  //       confirmTxWallet = toast.loading("Please Confirm Transaction...");
+  //       break;
+  //     case "Mining":
+  //       toast.dismiss(confirmTxWallet);
+  //       loadingToast = toast.loading("Rejecting Confirmation...");
+  //       break;
+  //     case "Success":
+  //       toast.dismiss(loadingToast);
+  //       successToast = toast.success("A confirmation has been successfully rejected! ", {
+  //         duration: 5000,
+  //       });
+  //       setDisabledBtn(false);
+  //       setTimeout(() => {
+  //         toast.dismiss(successToast);
+  //       }, 6000);
+  //       break;
+  //     case "Exception":
+  //       toast.dismiss(loadingToast);
+  //       toast.error(rejectConfirmationState?.errorMessage || "", {
+  //         duration: 5000,
+  //       });
+  //       setDisabledBtn(false);
+  //       break;
+  //     case "Fail":
+  //       toast.dismiss(loadingToast);
+  //       toast.error(rejectConfirmationState?.errorMessage || "", {
+  //         duration: 5000,
+  //       });
+  //       setDisabledBtn(false);
+  //       break;
+  //     default:
+  //       break;
+  //   }
+  // }, [rejectConfirmationState]);
 
   const steps = [
-    transaction?.transfers?.length > 0 ? "Created" : "On-chain rejection created",
+    !transaction?.isExecuted || transaction?.transfers?.length > 0 ? "Created" : "On-chain rejection created",
     <Typography key="second" variant="body2">
       Confimations ({parseInt(transaction?.confirmations?.length)} of {confirmationsRequired})
     </Typography>,

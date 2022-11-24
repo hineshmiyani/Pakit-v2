@@ -82,22 +82,9 @@ const MakeTransactionDialog: React.FC<Props> = ({ children, walletAddress }) => 
   const { account, library } = useEthers();
   const signer = useGetSigner();
 
-  // const txInfo = useGetTxInfo(signer, "0x23bb819d08d620f80c834eb5abf7fc35504d1ce6408e8dc9fd505be696a6dfa6");
-  // console.log("txInfo", txInfo);
-  // 0x8b9a196e4bf8c3d8ee7055346739f8736c1e94dc03d5734a111783432daf913d
-  // const ownerAddress = useGetOwnersApprovedTx(
-  //   signer,
-  //   walletAddress,
-  //   "0x23bb819d08d620f80c834eb5abf7fc35504d1ce6408e8dc9fd505be696a6dfa6",
-  // );
-
-  // const pendingTxs = useGetPendingTxs(signer, walletAddress);
-  // const allTxs = useGetAllTxs(signer, walletAddress);
-
   const accountBalance = useEtherBalance(account?.toString());
   const walletBalance: any = useEtherBalance(walletAddress);
   const { state: depositTxState, send: deposit } = useContractFunction(contract, "deposit");
-  const { state: submitTxState, send: submitTx } = useContractFunction(contract, "submitTransaction");
 
   const depositEther = () => {
     setDisabledBtn(true);
@@ -108,7 +95,7 @@ const MakeTransactionDialog: React.FC<Props> = ({ children, walletAddress }) => 
       });
   };
 
-  const sendEther = async () => {
+  const sendFund = async () => {
     setDisabledBtn(true);
     if (!walletAddress || Array.isArray(walletAddress) || !signer || !recipientAddress) return;
 
@@ -117,65 +104,55 @@ const MakeTransactionDialog: React.FC<Props> = ({ children, walletAddress }) => 
       value: parseEther(sendAmount?.toString()).toString(),
       data: "0x00",
     };
-
     const createTx = await createNewTransaction(signer, walletAddress, safeTransactionData);
+
     setDisabledBtn(false);
-    // sendAmount !== 0 &&
-    //   recipientAddress &&
-    //   walletId &&
-    //   submitTx(
-    //     account,
-    //     +walletId,
-    //     recipientAddress,
-    //     parseEther(sendAmount?.toString()),
-    //     "0x00"
-    //   );
   };
 
-  useEffect(() => {
-    console.log({ submitTxState });
-    let loadingToast, confirmTxWallet, successToast: any;
-    switch (submitTxState?.status) {
-      case "PendingSignature":
-        confirmTxWallet = toast.loading("Please Confirm Transaction...");
-        break;
-      case "Mining":
-        toast.dismiss(confirmTxWallet);
-        loadingToast = toast.loading("Submitting Transaction...");
-        break;
-      case "Success":
-        toast.dismiss(loadingToast);
-        successToast = toast.success("Transaction has been successfully submitted! ", {
-          duration: 5000,
-        });
-        setDisabledBtn(false);
-        setTimeout(() => {
-          toast.dismiss(successToast);
-          router.push({
-            pathname: `/dashboard/${walletAddress}/transactions`,
-            query: { id: walletId },
-          });
-        }, 6000);
-        handleClose();
-        break;
-      case "Exception":
-        toast.dismiss(loadingToast);
-        toast.error(submitTxState?.errorMessage || "", {
-          duration: 5000,
-        });
-        setDisabledBtn(false);
-        break;
-      case "Fail":
-        toast.dismiss(loadingToast);
-        toast.error(submitTxState?.errorMessage || "", {
-          duration: 5000,
-        });
-        setDisabledBtn(false);
-        break;
-      default:
-        break;
-    }
-  }, [submitTxState]);
+  // useEffect(() => {
+  //   console.log({ submitTxState });
+  //   let loadingToast, confirmTxWallet, successToast: any;
+  //   switch (submitTxState?.status) {
+  //     case "PendingSignature":
+  //       confirmTxWallet = toast.loading("Please Confirm Transaction...");
+  //       break;
+  //     case "Mining":
+  //       toast.dismiss(confirmTxWallet);
+  //       loadingToast = toast.loading("Submitting Transaction...");
+  //       break;
+  //     case "Success":
+  //       toast.dismiss(loadingToast);
+  //       successToast = toast.success("Transaction has been successfully submitted! ", {
+  //         duration: 5000,
+  //       });
+  //       setDisabledBtn(false);
+  //       setTimeout(() => {
+  //         toast.dismiss(successToast);
+  //         router.push({
+  //           pathname: `/dashboard/${walletAddress}/transactions`,
+  //           query: { id: walletId },
+  //         });
+  //       }, 6000);
+  //       handleClose();
+  //       break;
+  //     case "Exception":
+  //       toast.dismiss(loadingToast);
+  //       toast.error(submitTxState?.errorMessage || "", {
+  //         duration: 5000,
+  //       });
+  //       setDisabledBtn(false);
+  //       break;
+  //     case "Fail":
+  //       toast.dismiss(loadingToast);
+  //       toast.error(submitTxState?.errorMessage || "", {
+  //         duration: 5000,
+  //       });
+  //       setDisabledBtn(false);
+  //       break;
+  //     default:
+  //       break;
+  //   }
+  // }, [submitTxState]);
 
   useEffect(() => {
     console.log({ depositTxState });
@@ -483,7 +460,7 @@ const MakeTransactionDialog: React.FC<Props> = ({ children, walletAddress }) => 
                 Cancel
               </Button>
               <Button
-                onClick={() => sendEther()}
+                onClick={() => sendFund()}
                 sx={styles.submitButton}
                 disabled={!recipientAddress || sendAmount === 0 || disabledBtn}
               >
