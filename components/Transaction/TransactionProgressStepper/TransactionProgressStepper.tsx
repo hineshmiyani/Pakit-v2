@@ -181,7 +181,7 @@ const TransactionProgressStepper: React.FC<Props> = ({ transaction, confirmation
   // };
 
   const steps = [
-    !transaction?.isExecuted || transaction?.transfers?.length > 0 ? "Created" : "On-chain rejection created",
+    "Created",
     <Typography key="second" variant="body2">
       Confimations ({approvedTxOwnerList && approvedTxOwnerList?.length} of {confirmationsRequired})
     </Typography>,

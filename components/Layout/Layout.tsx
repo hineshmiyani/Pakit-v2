@@ -44,7 +44,6 @@ const Layout: React.FC<Props> = ({ children }) => {
       setTimeout(() => {
         const walletIndex = typeof walletAddress === "string" && walletList.indexOf(walletAddress);
         if (isOwner === true && walletId) {
-          console.log({ walletIndex, walletId });
           walletIndex != +walletId &&
             router.push({
               pathname: `/dashboard/${walletAddress}`,

@@ -120,7 +120,6 @@ export function useGetTotalBalance(signer: JsonRpcSigner | undefined, walletAddr
 
     const safeService = safeServiceClient(signer);
     const usdBalances: SafeBalanceUsdResponse[] = await safeService.getUsdBalances(walletAddress);
-    console.log("usdBalances", usdBalances);
     setTokensBalance(usdBalances);
     setBalance(() => usdBalances?.reduce((prev, token) => prev + parseFloat(token?.fiatBalance), 0));
   };
@@ -145,7 +144,6 @@ export function useGetOwners(signer: JsonRpcSigner | undefined, walletAddress: s
       const ethAdapter = createEthersAdapter(signer);
       const safeSdk = await Safe.create({ ethAdapter, safeAddress: walletAddress });
       const ownerAddresses = await safeSdk.getOwners();
-      // console.log("ownerAddresses", ownerAddresses);
       setOwnerAddresses(ownerAddresses);
     })();
   }, [signer, walletAddress]);
@@ -165,7 +163,6 @@ export function useGetTokenList(signer: JsonRpcSigner | undefined) {
     (async () => {
       const safeService = safeServiceClient(signer);
       const tokenList: TokenInfoListResponse = await safeService.getTokenList();
-      console.log("tokenList", tokenList);
       setTokenList(tokenList);
     })();
   }, [signer]);
@@ -185,7 +182,6 @@ export function useGetTxInfo(signer: JsonRpcSigner | undefined, safeTxHash: stri
     (async () => {
       const safeService = safeServiceClient(signer);
       const txInfo: SafeMultisigTransactionResponse = await safeService.getTransaction(safeTxHash);
-      console.log("txInfo ---- ", txInfo);
       setTxInfoo(txInfo);
     })();
   }, [signer, safeTxHash]);
@@ -204,7 +200,6 @@ export function useGetPendingTxs(signer: JsonRpcSigner | undefined, walletAddres
 
     const safeService = safeServiceClient(signer);
     const pendingTxs: SafeMultisigTransactionListResponse = await safeService.getPendingTransactions(walletAddress);
-    console.log("pendingTxs ---- ", pendingTxs);
     setPendingTxs(pendingTxs);
   };
 
@@ -226,7 +221,6 @@ export function useGetAllTxs(signer: JsonRpcSigner | undefined, walletAddress: s
 
     const safeService = safeServiceClient(signer);
     const allTxs: AllTransactionsListResponse = await safeService.getAllTransactions(walletAddress);
-    console.log("allTxs ---- ", allTxs);
     setAllTxs(allTxs);
   };
 
@@ -253,7 +247,6 @@ export function useNumConfirmationsRequired(
       const ethAdapter = createEthersAdapter(signer);
       const safeSdk = await Safe.create({ ethAdapter, safeAddress: walletAddress });
       const threshold = await safeSdk.getThreshold();
-      console.log("threshold", threshold);
       setConfirmations(threshold);
     })();
   }, [signer, walletAddress]);
@@ -277,7 +270,6 @@ export function useGetOwnersApprovedTx(
     const ethAdapter = createEthersAdapter(signer);
     const safeSdk = await Safe.create({ ethAdapter, safeAddress: walletAddress });
     const ownerAddresses = await safeSdk.getOwnersWhoApprovedTx(txHash);
-    console.log("approvedTxOwnerList ", ownerAddresses);
     setOwnerAddresses(ownerAddresses);
   };
 

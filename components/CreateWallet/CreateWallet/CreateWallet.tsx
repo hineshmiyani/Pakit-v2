@@ -51,7 +51,6 @@ const CreateWallet = () => {
         owners: ownersList,
       },
       callback: (txHash: string) => {
-        console.log({ txHash });
         //* Processing Tx
         confirmTxToast && toast.dismiss(confirmTxToast);
         loadingToast = toast.loading("Creating Wallet...");
@@ -66,8 +65,6 @@ const CreateWallet = () => {
         //* Creat Tx
         const safeSdk: Safe = await createNewWallet(signer, props);
         const newSafeAddress = safeSdk?.getAddress();
-
-        console.log({ newSafeAddress });
 
         //* Success Tx
         if (newSafeAddress) {
@@ -96,7 +93,6 @@ const CreateWallet = () => {
   useEffect(() => {
     if (signer && isCreated) {
       setTimeout(async () => {
-        console.log({ walletList });
         router.push({
           pathname: `/dashboard/${walletList.at(-1)}`,
           query: { id: walletList.length - 1 },

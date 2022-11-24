@@ -65,13 +65,6 @@ export const createNewTransaction = async (
   //* Approve Tx by created tx owner
   const txResponse = await safeSdk.approveTransactionHash(txHash);
   const txReceipt = await txResponse.transactionResponse?.wait();
-
-  console.log({ safeTransaction });
-  console.log({ txHash });
-  console.log({ senderSignature });
-  console.log({ proposeTx });
-  console.log({ txResponse });
-  console.log({ txReceipt });
 };
 
 /**
@@ -82,18 +75,9 @@ export const confirmTx = async (signer: JsonRpcSigner, walletAddress: string, sa
   // const safeService = safeServiceClient(signer);
   const safeSdk = await Safe.create({ ethAdapter, safeAddress: walletAddress });
 
-  // let signature = await safeSdk.signTransactionHash(safeTxHash);
-  // const signatureResponse: SignatureResponse = await safeService.confirmTransaction(safeTxHash, signature.data);
-
-  // console.log({ signature });
-  // console.log({ signatureResponse });
-
   //* Approve Tx by created tx owner
   const txResponse = await safeSdk.approveTransactionHash(safeTxHash);
   const txReceipt = await txResponse.transactionResponse?.wait();
-
-  console.log({ txResponse });
-  console.log({ txReceipt });
 };
 
 /**
@@ -106,7 +90,6 @@ export const rejectTx = async (signer: JsonRpcSigner, walletAddress: string, non
 
   //* Reject Tx
   const rejectionTransaction = await safeSdk.createRejectionTransaction(nonce);
-  console.log({ rejectionTransaction });
 };
 
 /**
@@ -135,7 +118,6 @@ export const executeTx = async (signer: JsonRpcSigner, walletAddress: string, tx
   //* Execute Tx
   const executeTxResponse = await safeSdk.executeTransaction(modifiedTx);
   await executeTxResponse.transactionResponse?.wait();
-  console.log({ executeTxResponse });
 };
 
 /**
