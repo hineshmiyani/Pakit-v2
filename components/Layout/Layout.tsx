@@ -20,7 +20,7 @@ const Layout: React.FC<Props> = ({ children }) => {
   const { account } = useEthers();
 
   const signer = useGetSigner();
-  const walletList = useGetWallets(signer);
+  const { walletList } = useGetWallets(signer);
   const isOwner = useIsOwner(signer, walletAddress);
 
   useEffect(() => {

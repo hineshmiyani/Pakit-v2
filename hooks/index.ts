@@ -52,18 +52,20 @@ export function useGetSigner() {
 export function useGetWallets(signer: JsonRpcSigner | undefined) {
   const [walletList, setWalletList] = useState<string[]>([]);
 
-  useEffect(() => {
+  const getWallets = async () => {
     if (!signer) return;
-    // IIFE
-    (async () => {
-      const ownerAddress = await signer?.getAddress();
-      const safeService = safeServiceClient(signer);
-      const safes: OwnerResponse = await safeService.getSafesByOwner(ownerAddress);
-      setWalletList(safes?.safes);
-    })();
+
+    const ownerAddress = await signer?.getAddress();
+    const safeService = safeServiceClient(signer);
+    const safes: OwnerResponse = await safeService.getSafesByOwner(ownerAddress);
+    setWalletList(safes?.safes);
+  };
+
+  useEffect(() => {
+    getWallets();
   }, [signer]);
 
-  return walletList;
+  return { walletList, refetch: () => getWallets() };
 }
 
 /**

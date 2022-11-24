@@ -27,12 +27,13 @@ const getStepDescription = (step: number) => {
 const CreateWallet = () => {
   const router = useRouter();
   const signer = useGetSigner();
-  const walletList = useGetWallets(signer);
+  const { walletList, refetch: getWallets } = useGetWallets(signer);
 
   const [activeStep, setActiveStep] = useState(0);
   const [completed, setCompleted] = useState<any>({});
   const [disabledBtn, setDisabledBtn] = useState(false);
   const [isCreated, setIsCreated] = useState(false);
+  const [safeAddress, setSafeAddress] = useState("");
 
   const totalSteps = steps.length;
   const completedSteps = Object.values(completed).filter((step) => step).length;
@@ -68,7 +69,10 @@ const CreateWallet = () => {
 
         //* Success Tx
         if (newSafeAddress) {
+          console.log({ newSafeAddress });
+          setSafeAddress(newSafeAddress);
           setIsCreated(true);
+          await getWallets();
           toast.dismiss(loadingToast);
           successToast = toast.success("Wallet successfully created!", {
             duration: 5000,
@@ -92,9 +96,10 @@ const CreateWallet = () => {
 
   useEffect(() => {
     if (signer && isCreated) {
+      getWallets();
       setTimeout(async () => {
         router.push({
-          pathname: `/dashboard/${walletList.at(-1)}`,
+          pathname: `/dashboard/${safeAddress}`,
           query: { id: walletList.length - 1 },
         });
         sessionStorage.removeItem("ownersData");

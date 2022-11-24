@@ -17,13 +17,14 @@ const Sidebar = () => {
   const { library } = useEthers();
 
   const signer = useGetSigner();
-  const walletList = useGetWallets(signer);
+  const { walletList, refetch: getWallets } = useGetWallets(signer);
   const { balance, refetch: getTokenBalance } = useGetTotalBalance(signer, walletAddress);
 
   const [tooltipTitle, setTooltipTitle] = useState<string>("Copy to clipboard");
 
   useEffect(() => {
     getTokenBalance();
+    getWallets();
   }, [router?.asPath]);
 
   return (
