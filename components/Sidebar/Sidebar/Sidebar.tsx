@@ -40,117 +40,113 @@ const Sidebar = () => {
 
       <Divider light />
 
-      {router.route.includes("dashboard") &&
-        walletId &&
-        [walletList?.[+walletId]]?.map((wallet: string) => (
-          <Box key={wallet}>
-            <Stack p={2} spacing={1.75} alignItems="center">
-              <Stack direction="row" alignItems="center" spacing={1.5}>
-                <Image
-                  src="/asset/images/walletAvatar.png"
-                  width="42"
-                  height="42"
-                  alt=""
-                  className="rounded-full object-cover"
-                />
-                <Box>
-                  <Typography variant="body2">
-                    <Typography variant="caption" fontWeight="bold">
-                      {library?.network?.name?.substring(0, 2)}
-                      {library?.network?.name?.substring(3, 4)}:
-                    </Typography>{" "}
-                    {wallet?.slice(0, 6)}
-                    ...{wallet?.slice(-4)}
-                  </Typography>
+      {router.route.includes("dashboard") && (
+        <Stack p={2} spacing={1.75} alignItems="center">
+          <Stack direction="row" alignItems="center" spacing={1.5}>
+            <Image
+              src="/asset/images/walletAvatar.png"
+              width="42"
+              height="42"
+              alt=""
+              className="rounded-full object-cover"
+            />
+            <Box>
+              <Typography variant="body2">
+                <Typography variant="caption" fontWeight="bold">
+                  {library?.network?.name?.substring(0, 2)}
+                  {library?.network?.name?.substring(3, 4)}:
+                </Typography>{" "}
+                {walletAddress?.slice(0, 6)}
+                ...{walletAddress?.slice(-4)}
+              </Typography>
 
-                  <Typography variant="body2" color="primary.main" fontWeight="600">
-                    {balance ? balance : 0.0} USD
-                  </Typography>
-                </Box>
-              </Stack>
+              <Typography variant="body2" color="primary.main" fontWeight="600">
+                {balance ? balance : 0.0} USD
+              </Typography>
+            </Box>
+          </Stack>
 
-              <Stack direction="row" spacing={1} alignItems="center" justifyContent="center" width="100%" px={1.5}>
-                <Tooltip title={tooltipTitle} placement="top">
-                  <IconButton
-                    size="medium"
-                    sx={styles.iconButton}
-                    onClick={() => {
-                      wallet && navigator.clipboard.writeText(wallet);
-                      setTooltipTitle("Copied");
-                      setTimeout(() => {
-                        setTooltipTitle("Copy to clipboard");
-                      }, 1200);
-                    }}
-                  >
-                    <ContentCopyRounded sx={styles.copyIcon} />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="View on goerli.etherscan.io" placement="top">
-                  <IconButton
-                    size="small"
-                    sx={styles.iconButton}
-                    onClick={() => {
-                      window.open(`https://${library?.network?.name}.etherscan.io/address/${wallet}`, "_blank");
-                    }}
-                  >
-                    <ShareIcon />
-                  </IconButton>
-                </Tooltip>
-              </Stack>
-
-              <Divider light sx={{ width: "100%" }} />
-
-              {/* New Transaction */}
-              <MakeTransactionDialog walletAddress={wallet}>
-                <Button variant="outlined" sx={styles.actionsButton}>
-                  New Transaction
-                </Button>
-              </MakeTransactionDialog>
-
-              {/* Dashboard */}
-              <Button
-                variant="outlined"
-                sx={styles.actionsButton}
-                onClick={() =>
-                  router.push({
-                    pathname: `/dashboard/${wallet}`,
-                    query: { id: walletId },
-                  })
-                }
+          <Stack direction="row" spacing={1} alignItems="center" justifyContent="center" width="100%" px={1.5}>
+            <Tooltip title={tooltipTitle} placement="top">
+              <IconButton
+                size="medium"
+                sx={styles.iconButton}
+                onClick={() => {
+                  walletAddress && navigator.clipboard.writeText(walletAddress);
+                  setTooltipTitle("Copied");
+                  setTimeout(() => {
+                    setTooltipTitle("Copy to clipboard");
+                  }, 1200);
+                }}
               >
-                Dashboard
-              </Button>
-
-              {/* Assets */}
-              <Button
-                variant="outlined"
-                sx={styles.actionsButton}
-                onClick={() =>
-                  router.push({
-                    pathname: `/dashboard/${wallet}/assets`,
-                    query: { id: walletId },
-                  })
-                }
+                <ContentCopyRounded sx={styles.copyIcon} />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="View on goerli.etherscan.io" placement="top">
+              <IconButton
+                size="small"
+                sx={styles.iconButton}
+                onClick={() => {
+                  window.open(`https://${library?.network?.name}.etherscan.io/address/${walletAddress}`, "_blank");
+                }}
               >
-                Assets
-              </Button>
+                <ShareIcon />
+              </IconButton>
+            </Tooltip>
+          </Stack>
 
-              {/* Transactions */}
-              <Button
-                variant="outlined"
-                sx={styles.actionsButton}
-                onClick={() =>
-                  router.push({
-                    pathname: `/dashboard/${wallet}/transactions`,
-                    query: { id: walletId },
-                  })
-                }
-              >
-                Transactions
-              </Button>
-            </Stack>
-          </Box>
-        ))}
+          <Divider light sx={{ width: "100%" }} />
+
+          {/* New Transaction */}
+          <MakeTransactionDialog walletAddress={walletAddress}>
+            <Button variant="outlined" sx={styles.actionsButton}>
+              New Transaction
+            </Button>
+          </MakeTransactionDialog>
+
+          {/* Dashboard */}
+          <Button
+            variant="outlined"
+            sx={styles.actionsButton}
+            onClick={() =>
+              router.push({
+                pathname: `/dashboard/${walletAddress}`,
+                query: { id: walletId },
+              })
+            }
+          >
+            Dashboard
+          </Button>
+
+          {/* Assets */}
+          <Button
+            variant="outlined"
+            sx={styles.actionsButton}
+            onClick={() =>
+              router.push({
+                pathname: `/dashboard/${walletAddress}/assets`,
+                query: { id: walletId },
+              })
+            }
+          >
+            Assets
+          </Button>
+
+          {/* Transactions */}
+          <Button
+            variant="outlined"
+            sx={styles.actionsButton}
+            onClick={() =>
+              router.push({
+                pathname: `/dashboard/${walletAddress}/transactions`,
+                query: { id: walletId },
+              })
+            }
+          >
+            Transactions
+          </Button>
+        </Stack>
+      )}
 
       <Divider light />
       {/* Sidebar Drawer */}
