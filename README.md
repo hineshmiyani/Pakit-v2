@@ -1,34 +1,43 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Pakit V2 - Multisignature Wallet
 
-## Getting Started
+Pakit is a full-stack multisignature decentralised wallet application. It allows a user to create as many multisig wallets as they like by putting the owner's
+address and the required confirmations on the Goerli chain with some test ethers or ERC20 Tokens.
+Using the NextJs Framework and Material UI, I
+built a front-end and integrated the Safe Core SDK and Safe Service Client API for all multsig wallet functionality.
 
-First, run the development server:
+# Features ✨
 
-```bash
-npm run dev
-# or
-yarn dev
-```
+- The user can connect their wallet (metamask).
+- The user can create a new wallet.
+- The user can transfer Ether and ERC20 tokens to the wallet.
+- The user can propose an Ether and ERC20 transfer transaction.
+- The user can accept and execute the transaction.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+# Tech Stack 💻
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+- NextJS
+- React
+- Typescript
+- Safe Core SDK
+- Safe Service Client API
+- Material UI
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+## Demo
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+### Click [here](https://pakit-v2.vercel.app/) to visit the live demo website.
 
-## Learn More
+## Video Guide
 
-To learn more about Next.js, take a look at the following resources:
+### Click [here](https://drive.google.com/file/d/1s4BsRrCQJ9YDbkVI5hu_KY-MU4PJHn2q/view) to watch video.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Screenshots
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+![Pakit Landing](https://i.imgur.com/5Zdd9yx.png)
+![Pakit Landing](https://i.imgur.com/kZiQ1pg.png)
+![Pakit Landing](https://i.imgur.com/4oLI6Cv.png)
+![Pakit Landing](https://i.imgur.com/nlw8yfX.png)
+![Pakit Landing](https://i.imgur.com/ZiIY5U7.png)
+![Pakit Landing](https://i.imgur.com/hIEgKUt.png)
+![Pakit Landing](https://i.imgur.com/z9ORFBa.png)
+![Pakit Landing](https://i.imgur.com/VSdnFw4.png)
+![Pakit Landing](https://i.imgur.com/7loLIuc.png)
