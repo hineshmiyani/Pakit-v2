@@ -7,7 +7,7 @@ import { ShareIcon } from "../index";
 import { styles } from "./styles";
 
 type Props = {
-  toAddress: "string";
+  toAddress: string;
   truncate?: boolean;
 };
 
@@ -17,13 +17,7 @@ const AccountAvatar: React.FC<Props> = ({ toAddress, truncate }) => {
 
   return (
     <Stack spacing={1.8} direction="row" alignItems="center">
-      <Image
-        src="/asset/images/avatar.png"
-        width="34"
-        height="34"
-        alt=""
-        className="rounded-full object-cover"
-      />
+      <Image src="/asset/images/avatar.png" width="34" height="34" alt="" className="rounded-full object-cover" />
       {truncate ? (
         <Typography variant="body2">
           <Typography variant="body2" component="span" fontWeight="bold">
@@ -63,10 +57,7 @@ const AccountAvatar: React.FC<Props> = ({ toAddress, truncate }) => {
           size="small"
           sx={styles.iconButton}
           onClick={() => {
-            window.open(
-              `https://${library?.network?.name}.etherscan.io/address/${toAddress}`,
-              "_blank"
-            );
+            window.open(`https://${library?.network?.name}.etherscan.io/address/${toAddress}`, "_blank");
           }}
         >
           <ShareIcon />

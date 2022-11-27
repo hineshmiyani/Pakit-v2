@@ -185,7 +185,19 @@ const TransactionProgressStepper: React.FC<Props> = ({ transaction, confirmation
     <Typography key="second" variant="body2">
       Confimations ({approvedTxOwnerList && approvedTxOwnerList?.length} of {confirmationsRequired})
     </Typography>,
-    <AccountAvatar key="third" toAddress={transaction?.to} truncate={true} />,
+    transaction?.isExecuted ? (
+      <AccountAvatar
+        key="third"
+        toAddress={transaction?.transfers ? transaction?.transfers?.[0]?.to : transaction?.to}
+        truncate={true}
+      />
+    ) : (
+      <AccountAvatar
+        key="third"
+        toAddress={transaction?.dataDecoded?.parameters?.[0]?.value ?? transaction?.to}
+        truncate={true}
+      />
+    ),
     "Executed",
   ];
 

@@ -223,6 +223,7 @@ export function useGetAllTxs(signer: JsonRpcSigner | undefined, walletAddress: s
 
     const safeService = safeServiceClient(signer);
     const allTxs: AllTransactionsListResponse = await safeService.getAllTransactions(walletAddress);
+    console.log("allTxs", allTxs);
     setAllTxs(allTxs);
   };
 

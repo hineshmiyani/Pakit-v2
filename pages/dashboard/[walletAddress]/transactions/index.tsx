@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/router";
-import { formatEther } from "ethers/lib/utils";
+import { formatEther, formatUnits } from "ethers/lib/utils";
 import { useEthers } from "@usedapp/core";
 import {
   Accordion,
@@ -16,9 +16,21 @@ import {
   Typography,
 } from "@mui/material";
 import { CallMade, CallReceived, ExpandMore, HighlightOff, PeopleAltOutlined } from "@mui/icons-material";
-import { useGetAllTxs, useGetPendingTxs, useGetSigner, useNumConfirmationsRequired } from "../../../../hooks";
+import {
+  useGetAllTxs,
+  useGetPendingTxs,
+  useGetSigner,
+  useGetTotalBalance,
+  useNumConfirmationsRequired,
+} from "../../../../hooks";
 import { AccountAvatar, TransactionProgressStepper, TxNotFound } from "../../../../components";
 import { styles } from "./styles";
+import {
+  EthereumTxWithTransfersResponse,
+  SafeBalanceUsdResponse,
+  SafeModuleTransactionWithTransfersResponse,
+  SafeMultisigTransactionWithTransfersResponse,
+} from "@gnosis.pm/safe-service-client";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -72,6 +84,12 @@ const Transactions = () => {
   const confirmationsRequired = useNumConfirmationsRequired(signer, walletAddress);
   const { results: transactionsList, refetch: getAllTxs } = useGetAllTxs(signer, walletAddress);
   const { results: pendingTxList, refetch: getPendingTxs } = useGetPendingTxs(signer, walletAddress);
+  const { tokensBalance: tokensList } = useGetTotalBalance(signer, walletAddress);
+
+  const findTokenInfo = (tokenAddress: string) => {
+    const token = tokensList?.find((token: SafeBalanceUsdResponse) => token?.tokenAddress === tokenAddress);
+    return token;
+  };
 
   return (
     <>
@@ -113,13 +131,32 @@ const Transactions = () => {
 
                           <Box display="flex" alignItems="center" gap={1.2} flexBasis="25%" maxWidth="25%">
                             <Image
-                              src="/asset/images/ethLogo.png"
+                              src={
+                                transaction?.dataDecoded
+                                  ? findTokenInfo(transaction?.to)?.token?.logoUri ||
+                                    "/asset/images/token-placeholder.svg"
+                                  : "/asset/images/ethLogo.png"
+                              }
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = "/asset/images/token-placeholder.svg";
+                                (e.target as HTMLImageElement).srcset = "/asset/images/token-placeholder.svg";
+                              }}
                               height={26}
                               width={26}
                               className="rounded-full object-cover"
                               alt=""
                             />
-                            <Typography>{transaction?.value && formatEther(transaction?.value)} ETH</Typography>
+                            {transaction?.dataDecoded ? (
+                              <Typography>
+                                {formatUnits(
+                                  transaction?.dataDecoded?.parameters?.[1]?.value || "0",
+                                  findTokenInfo(transaction?.to)?.token?.decimals,
+                                )}{" "}
+                                {findTokenInfo(transaction?.to)?.token?.symbol}
+                              </Typography>
+                            ) : (
+                              <Typography>{transaction?.value && formatEther(transaction?.value)} ETH</Typography>
+                            )}
                           </Box>
 
                           <Box display="flex" alignItems="center" gap={1.2} flexBasis="25%" maxWidth="25%">
@@ -143,12 +180,21 @@ const Transactions = () => {
                             <Typography variant="body1">
                               Send{" "}
                               <Typography variant="body1" component="span" fontWeight="700">
-                                {formatEther(transaction?.value)}{" "}
+                                {transaction?.dataDecoded
+                                  ? formatUnits(
+                                      transaction?.dataDecoded?.parameters?.[1]?.value || "0",
+                                      findTokenInfo(transaction?.to)?.token?.decimals,
+                                    )
+                                  : formatEther(transaction?.value)}{" "}
                               </Typography>
-                              ETH to:
+                              {transaction?.dataDecoded ? findTokenInfo(transaction?.to)?.token?.symbol : "ETH"} to:
                             </Typography>
                             <Box my={1}>
-                              <AccountAvatar toAddress={transaction?.to} />
+                              {transaction?.dataDecoded ? (
+                                <AccountAvatar toAddress={transaction?.dataDecoded?.parameters?.[0]?.value} />
+                              ) : (
+                                <AccountAvatar toAddress={transaction?.to} />
+                              )}
                             </Box>
                           </Box>
 
@@ -178,149 +224,169 @@ const Transactions = () => {
           {/* Completed Txs */}
           <TabPanel value={value} index={1}>
             <Box>
-              {transactionsList?.map((transaction: any, index: number) => {
-                if (!("isExecuted" in transaction) || transaction?.isExecuted === true) {
-                  return (
-                    <Accordion
-                      key={transaction?.to + index}
-                      sx={{
-                        my: 1.5,
-                        borderRadius: "4px !important",
-                        "&::before": { height: 0 },
-                      }}
-                    >
-                      <AccordionSummary expandIcon={<ExpandMore />} sx={styles.accordionSummary}>
-                        <Stack direction="row" spacing={2} alignItems="center" width="100%">
-                          <Box flexBasis="10%" maxWidth="10%">
-                            {transaction?.txType === TxType.MULTISIG_TRANSACTION && (
-                              <Typography>
-                                <Typography component="span" fontWeight="600">
-                                  Tx:{" "}
-                                </Typography>
-                                {transaction?.nonce}
-                              </Typography>
-                            )}
-                          </Box>
-
-                          <Box display="flex" alignItems="center" gap={1.2} flexBasis="20%" maxWidth="20%">
-                            {transaction?.txType === TxType.MULTISIG_TRANSACTION ? (
-                              <>
-                                <CallMade sx={{ color: "primary.buttonColor" }} />
-                                <Typography>Sent</Typography>
-                              </>
-                            ) : (
-                              <>
-                                <CallReceived sx={{ color: "success.main" }} />
-                                <Typography>Received</Typography>
-                              </>
-                            )}
-                          </Box>
-                          <Box display="flex" alignItems="center" gap={1.2} flexBasis="25%" maxWidth="25%">
-                            <Image
-                              src={
-                                transaction?.transfers?.[0]?.type === "ETHER_TRANSFER"
-                                  ? "/asset/images/ethLogo.png"
-                                  : transaction?.transfers?.[0]?.tokenInfo?.logoUri
-                              }
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).src = "/asset/images/token-placeholder.svg";
-                                (e.target as HTMLImageElement).srcset = "/asset/images/token-placeholder.svg";
-                              }}
-                              height={26}
-                              width={26}
-                              className="rounded-full object-cover"
-                              alt=""
-                            />
-                            <Typography>
-                              {transaction?.txType === TxType.MULTISIG_TRANSACTION && "-"}
-                              {formatEther(transaction?.transfers?.[0]?.value || "0")}{" "}
-                              {transaction?.transfers?.[0]?.type === "ETHER_TRANSFER"
-                                ? "ETH"
-                                : transaction?.transfers?.[0]?.tokenInfo?.symbol}
-                            </Typography>
-                          </Box>
-
-                          <Box display="flex" alignItems="center" gap={1.2} flexBasis="25%" maxWidth="25%">
-                            {transaction?.txType === TxType.MULTISIG_TRANSACTION && (
-                              <>
-                                <PeopleAltOutlined />
+              {transactionsList?.map(
+                (
+                  transaction:
+                    | SafeMultisigTransactionWithTransfersResponse
+                    | EthereumTxWithTransfersResponse
+                    | SafeModuleTransactionWithTransfersResponse,
+                  index: number,
+                ) => {
+                  if (!("isExecuted" in transaction) || transaction?.isExecuted === true) {
+                    return (
+                      <Accordion
+                        key={transaction?.to + index}
+                        sx={{
+                          my: 1.5,
+                          borderRadius: "4px !important",
+                          "&::before": { height: 0 },
+                        }}
+                      >
+                        <AccordionSummary expandIcon={<ExpandMore />} sx={styles.accordionSummary}>
+                          <Stack direction="row" spacing={2} alignItems="center" width="100%">
+                            <Box flexBasis="10%" maxWidth="10%">
+                              {transaction?.txType === TxType.MULTISIG_TRANSACTION && (
                                 <Typography>
-                                  {parseInt(transaction?.confirmations?.length)} out of {confirmationsRequired}
+                                  <Typography component="span" fontWeight="600">
+                                    Tx:{" "}
+                                  </Typography>
+                                  {transaction?.nonce}
                                 </Typography>
-                              </>
+                              )}
+                            </Box>
+
+                            <Box display="flex" alignItems="center" gap={1.2} flexBasis="20%" maxWidth="20%">
+                              {transaction?.txType === TxType.MULTISIG_TRANSACTION ? (
+                                <>
+                                  <CallMade sx={{ color: "primary.buttonColor" }} />
+                                  <Typography>Sent</Typography>
+                                </>
+                              ) : (
+                                <>
+                                  <CallReceived sx={{ color: "success.main" }} />
+                                  <Typography>Received</Typography>
+                                </>
+                              )}
+                            </Box>
+                            <Box display="flex" alignItems="center" gap={1.2} flexBasis="25%" maxWidth="25%">
+                              <Image
+                                src={
+                                  transaction?.transfers?.[0]?.type === "ETHER_TRANSFER"
+                                    ? "/asset/images/ethLogo.png"
+                                    : transaction?.transfers?.[0]?.tokenInfo?.logoUri ||
+                                      "/asset/images/token-placeholder.svg"
+                                }
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = "/asset/images/token-placeholder.svg";
+                                  (e.target as HTMLImageElement).srcset = "/asset/images/token-placeholder.svg";
+                                }}
+                                height={26}
+                                width={26}
+                                className="rounded-full object-cover"
+                                alt=""
+                              />
+                              <Typography>
+                                {transaction?.txType === TxType.MULTISIG_TRANSACTION && "-"}
+                                {transaction?.transfers?.[0]?.type === "ETHER_TRANSFER"
+                                  ? formatEther(transaction?.transfers?.[0]?.value || "0") + " ETH"
+                                  : `${formatUnits(
+                                      transaction?.transfers?.[0]?.value || "0",
+                                      transaction?.transfers?.[0]?.tokenInfo?.decimals,
+                                    )} ${transaction?.transfers?.[0]?.tokenInfo?.symbol}`}
+                              </Typography>
+                            </Box>
+
+                            <Box display="flex" alignItems="center" gap={1.2} flexBasis="25%" maxWidth="25%">
+                              {transaction?.txType === TxType.MULTISIG_TRANSACTION && (
+                                <>
+                                  <PeopleAltOutlined />
+                                  <Typography>
+                                    {transaction?.confirmations?.length && transaction?.confirmations?.length} out of{" "}
+                                    {confirmationsRequired}
+                                  </Typography>
+                                </>
+                              )}
+                            </Box>
+
+                            <Typography
+                              variant="body2"
+                              textAlign="center"
+                              sx={{
+                                ...styles.confirmationText,
+                                color: "success.main",
+                              }}
+                            >
+                              Success
+                            </Typography>
+                          </Stack>
+                        </AccordionSummary>
+
+                        <Divider />
+
+                        <AccordionDetails sx={{ pt: 2 }}>
+                          <Box display="flex" alignItems="top" gap={3}>
+                            {transaction?.txType === TxType.MULTISIG_TRANSACTION && (
+                              <Box>
+                                <Typography variant="body1">
+                                  Sent{" "}
+                                  <Typography variant="body1" component="span" fontWeight="700">
+                                    {formatUnits(
+                                      transaction?.transfers?.[0]?.value || "0",
+                                      transaction?.transfers?.[0]?.tokenInfo?.decimals ?? "18",
+                                    )}{" "}
+                                  </Typography>
+                                  {transaction?.transfers?.[0]?.type === "ETHER_TRANSFER"
+                                    ? "ETH"
+                                    : transaction?.transfers?.[0]?.tokenInfo?.symbol}{" "}
+                                  to:
+                                </Typography>
+                                <Box my={1}>
+                                  <AccountAvatar
+                                    toAddress={
+                                      transaction?.transfers ? transaction?.transfers?.[0]?.to : transaction?.to
+                                    }
+                                  />
+                                </Box>
+                              </Box>
+                            )}
+
+                            {!(transaction?.txType === TxType.MULTISIG_TRANSACTION) && (
+                              <Box>
+                                <Typography variant="body1">
+                                  Received{" "}
+                                  <Typography variant="body1" component="span" fontWeight="700">
+                                    {formatUnits(
+                                      transaction?.transfers?.[0]?.value || "0",
+                                      transaction?.transfers?.[0]?.tokenInfo?.decimals ?? "18",
+                                    )}{" "}
+                                  </Typography>
+                                  {transaction?.transfers?.[0]?.type === "ETHER_TRANSFER"
+                                    ? "ETH"
+                                    : transaction?.transfers?.[0]?.tokenInfo?.symbol}{" "}
+                                  from:
+                                </Typography>
+                                <Box my={1}>{transaction?.from && <AccountAvatar toAddress={transaction?.from} />}</Box>
+                              </Box>
+                            )}
+
+                            <Divider orientation="vertical" flexItem />
+
+                            {transaction?.txType === TxType.MULTISIG_TRANSACTION && confirmationsRequired && (
+                              <Box>
+                                <TransactionProgressStepper
+                                  transaction={transaction}
+                                  confirmationsRequired={confirmationsRequired}
+                                />
+                              </Box>
                             )}
                           </Box>
-
-                          <Typography
-                            variant="body2"
-                            textAlign="center"
-                            sx={{
-                              ...styles.confirmationText,
-                              color: "success.main",
-                            }}
-                          >
-                            Success
-                          </Typography>
-                        </Stack>
-                      </AccordionSummary>
-
-                      <Divider />
-
-                      <AccordionDetails sx={{ pt: 2 }}>
-                        <Box display="flex" alignItems="top" gap={3}>
-                          {transaction?.txType === TxType.MULTISIG_TRANSACTION && (
-                            <Box>
-                              <Typography variant="body1">
-                                Sent{" "}
-                                <Typography variant="body1" component="span" fontWeight="700">
-                                  {formatEther(transaction?.transfers?.[0]?.value || "0")}{" "}
-                                </Typography>
-                                {transaction?.transfers?.[0]?.type === "ETHER_TRANSFER"
-                                  ? "ETH"
-                                  : transaction?.transfers?.[0]?.tokenInfo?.symbol}{" "}
-                                to:
-                              </Typography>
-                              <Box my={1}>
-                                <AccountAvatar toAddress={transaction?.to} />
-                              </Box>
-                            </Box>
-                          )}
-
-                          {!(transaction?.txType === TxType.MULTISIG_TRANSACTION) && (
-                            <Box>
-                              <Typography variant="body1">
-                                Received{" "}
-                                <Typography variant="body1" component="span" fontWeight="700">
-                                  {formatEther(transaction?.transfers?.[0]?.value || "0")}{" "}
-                                </Typography>
-                                {transaction?.transfers?.[0]?.type === "ETHER_TRANSFER"
-                                  ? "ETH"
-                                  : transaction?.transfers?.[0]?.tokenInfo?.symbol}{" "}
-                                from:
-                              </Typography>
-                              <Box my={1}>
-                                <AccountAvatar toAddress={transaction?.from} />
-                              </Box>
-                            </Box>
-                          )}
-
-                          <Divider orientation="vertical" flexItem />
-
-                          {transaction?.txType === TxType.MULTISIG_TRANSACTION && confirmationsRequired && (
-                            <Box>
-                              <TransactionProgressStepper
-                                transaction={transaction}
-                                confirmationsRequired={confirmationsRequired}
-                              />
-                            </Box>
-                          )}
-                        </Box>
-                      </AccordionDetails>
-                    </Accordion>
-                  );
-                }
-                return null;
-              })}
+                        </AccordionDetails>
+                      </Accordion>
+                    );
+                  }
+                  return null;
+                },
+              )}
               {transactionsList?.filter((transaction: any) => transaction?.isExecuted === true)?.length === 0 && (
                 <TxNotFound text={completedText} />
               )}
