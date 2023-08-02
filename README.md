@@ -1,6 +1,6 @@
 # Pakit V2 - Multisignature Wallet
 
-Pakit is a full-stack multisignature decentralised wallet application. It allows a user to create as many multisig wallets as they like by putting the owner's
+Pakit is a multisignature decentralised wallet application. It allows a user to create as many multisig wallets as they like by putting the owner's
 address and the required confirmations on the Goerli chain with some test ethers or ERC20 Tokens.
 Using the NextJs Framework and Material UI, I
 built a front-end and integrated the Safe Core SDK and Safe Service Client API for all multsig wallet functionality.
