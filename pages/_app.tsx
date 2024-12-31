@@ -13,7 +13,7 @@ const config: Config = {
   readOnlyChainId: Sepolia.chainId,
   readOnlyUrls: {
     // [Mainnet.chainId]: getDefaultProvider("mainnet"),
-    [Sepolia.chainId]: getDefaultProvider("sepolia") || process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL || "",
+    [Sepolia.chainId]: process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL || getDefaultProvider("sepolia") || "",
   },
 };
 

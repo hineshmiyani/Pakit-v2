@@ -5,6 +5,7 @@ import Safe from "@safe-global/safe-core-sdk";
 import {
   AllTransactionsListResponse,
   OwnerResponse,
+  SafeBalanceResponse,
   SafeBalanceUsdResponse,
   SafeMultisigTransactionListResponse,
   TokenInfoListResponse,
@@ -112,25 +113,24 @@ export function useGetWalletBalance(signer: JsonRpcSigner | undefined, walletAdd
 /**
  * Get Multisig Wallet All Token ETH Balance
  */
-export function useGetTotalBalance(signer: JsonRpcSigner | undefined, walletAddress: string | string[] | undefined) {
+export function useGetBalances(signer: JsonRpcSigner | undefined, walletAddress: string | string[] | undefined) {
   const router = useRouter();
-  const [balance, setBalance] = useState<number>(0);
-  const [tokensBalance, setTokensBalance] = useState<SafeBalanceUsdResponse[]>();
+  const [tokensBalances, setTokensBalance] = useState<SafeBalanceResponse[]>();
 
-  const getTokenBalance = async () => {
+  const getTokenBalances = async () => {
     if (!walletAddress || Array.isArray(walletAddress) || !signer) return;
 
     const safeService = safeServiceClient(signer);
-    const usdBalances: SafeBalanceUsdResponse[] = await safeService.getUsdBalances(walletAddress);
-    setTokensBalance(usdBalances);
-    setBalance(() => usdBalances?.reduce((prev, token) => prev + parseFloat(token?.fiatBalance), 0));
+    const balances: SafeBalanceResponse[] = await safeService.getBalances(walletAddress);
+    setTokensBalance(balances);
+    console.log("Balances: ", balances);
   };
 
   useEffect(() => {
-    getTokenBalance();
+    getTokenBalances();
   }, [signer, walletAddress, router?.asPath]);
 
-  return { balance, tokensBalance, refetch: () => getTokenBalance() };
+  return { tokensBalances, refetch: () => getTokenBalances() };
 }
 
 /**

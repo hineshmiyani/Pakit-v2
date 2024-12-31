@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import {
   EthereumTxWithTransfersResponse,
-  SafeBalanceUsdResponse,
+  SafeBalanceResponse,
   SafeModuleTransactionWithTransfersResponse,
   SafeMultisigTransactionWithTransfersResponse,
 } from "@safe-global/safe-service-client";
@@ -25,9 +25,9 @@ import React, { useState } from "react";
 import { AccountAvatar, TransactionProgressStepper, TxNotFound } from "../../../../components";
 import {
   useGetAllTxs,
+  useGetBalances,
   useGetPendingTxs,
   useGetSigner,
-  useGetTotalBalance,
   useNumConfirmationsRequired,
 } from "../../../../hooks";
 import { styles } from "./styles";
@@ -84,10 +84,10 @@ const Transactions = () => {
   const confirmationsRequired = useNumConfirmationsRequired(signer, walletAddress);
   const { results: transactionsList, refetch: getAllTxs } = useGetAllTxs(signer, walletAddress);
   const { results: pendingTxList, refetch: getPendingTxs } = useGetPendingTxs(signer, walletAddress);
-  const { tokensBalance: tokensList } = useGetTotalBalance(signer, walletAddress);
+  const { tokensBalances: tokensList } = useGetBalances(signer, walletAddress);
 
   const findTokenInfo = (tokenAddress: string) => {
-    const token = tokensList?.find((token: SafeBalanceUsdResponse) => token?.tokenAddress === tokenAddress);
+    const token = tokensList?.find((token: SafeBalanceResponse) => token?.tokenAddress === tokenAddress);
     return token;
   };
 

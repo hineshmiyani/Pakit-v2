@@ -7,7 +7,7 @@ import { AddCircleOutlined, ContentCopyRounded } from "@mui/icons-material";
 import { Box, Button, Divider, IconButton, Stack, Tooltip, Typography } from "@mui/material";
 import { useEthers } from "@usedapp/core";
 
-import { useGetSigner, useGetTotalBalance, useGetWallets } from "../../../hooks";
+import { useGetSigner, useGetWallets } from "../../../hooks";
 import { MakeTransactionDialog, ShareIcon, SideDrawer } from "../../index";
 import { styles } from "./styles";
 
@@ -18,12 +18,10 @@ const Sidebar = () => {
 
   const signer = useGetSigner();
   const { walletList, refetch: getWallets } = useGetWallets(signer);
-  const { balance, refetch: getTokenBalance } = useGetTotalBalance(signer, walletAddress);
 
   const [tooltipTitle, setTooltipTitle] = useState<string>("Copy to clipboard");
 
   useEffect(() => {
-    getTokenBalance();
     getWallets();
   }, [router?.asPath]);
 
@@ -59,9 +57,9 @@ const Sidebar = () => {
                 ...{walletAddress?.slice(-4)}
               </Typography>
 
-              <Typography variant="body2" color="primary.main" fontWeight="600">
+              {/* <Typography variant="body2" color="primary.main" fontWeight="600">
                 {balance ? balance : 0.0} USD
-              </Typography>
+              </Typography> */}
             </Box>
           </Stack>
 

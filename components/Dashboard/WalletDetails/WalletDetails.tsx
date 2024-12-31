@@ -5,7 +5,7 @@ import React from "react";
 import { Box, Button, Card, CardContent, Chip, Paper, Stack, Typography } from "@mui/material";
 import { useEthers } from "@usedapp/core";
 
-import { useGetSigner, useGetTotalBalance } from "../../../hooks";
+import { useGetSigner } from "../../../hooks";
 import { MakeTransactionDialog } from "../../index";
 import { styles } from "./styles";
 
@@ -15,7 +15,6 @@ const WalletDetails = () => {
 
   const { library } = useEthers();
   const signer = useGetSigner();
-  const { balance } = useGetTotalBalance(signer, walletAddress);
 
   return (
     <>
@@ -43,14 +42,14 @@ const WalletDetails = () => {
             </Typography>
             <Chip label={library?.network?.name} sx={styles.chip} />
             <Stack alignItems="center" direction="row" mt={1.5}>
-              <Box>
+              {/* <Box>
                 <Typography variant="body1" color="primary.main" fontSize="14px">
                   Total Balance
                 </Typography>
                 <Typography variant="h6" color="primary.main">
                   {balance ? balance : 0.0} USD
                 </Typography>
-              </Box>
+              </Box> */}
 
               <Box ml="auto">
                 {walletAddress && !Array.isArray(walletAddress) && (

@@ -19,7 +19,7 @@ import {
   Typography,
 } from "@mui/material";
 import { SafeTransactionDataPartial } from "@safe-global/safe-core-sdk-types";
-import { SafeBalanceUsdResponse } from "@safe-global/safe-service-client";
+import { SafeBalanceResponse } from "@safe-global/safe-service-client";
 import { useEtherBalance, useEthers, useTokenBalance } from "@usedapp/core";
 import { utils } from "ethers";
 import Image from "next/image";
@@ -27,7 +27,7 @@ import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
-import { useGetSigner, useGetTotalBalance } from "../../../hooks";
+import { useGetBalances, useGetSigner } from "../../../hooks";
 import { createNewTransaction, encodeERC20TokenTransferData } from "../../../services";
 import { ShareIcon } from "../../index";
 import { styles } from "./styles";
@@ -87,7 +87,7 @@ const MakeTransactionDialog: React.FC<Props> = ({ children, walletAddress }) => 
   const { account, library } = useEthers();
   const signer = useGetSigner();
 
-  const { tokensBalance: tokensList } = useGetTotalBalance(signer, walletAddress);
+  const { tokensBalances: tokensList } = useGetBalances(signer, walletAddress);
   const accountBalance = useEtherBalance(account?.toString());
   const walletBalance: any = useEtherBalance(walletAddress);
 
@@ -121,7 +121,7 @@ const MakeTransactionDialog: React.FC<Props> = ({ children, walletAddress }) => 
     } else {
       //* Find ERC20 Token from Token List
       const ERC20Token =
-        tokensList && tokensList?.find((token: SafeBalanceUsdResponse) => token?.token?.name === selectToken);
+        tokensList && tokensList?.find((token: SafeBalanceResponse) => token?.token?.name === selectToken);
       const value = parseUnits(sendAmount?.toString(), ERC20Token?.token?.decimals);
 
       //* Transfer ERC20
@@ -375,7 +375,7 @@ const MakeTransactionDialog: React.FC<Props> = ({ children, walletAddress }) => 
                 </Typography>
                 <Select value={selectToken} onChange={handleChange} color="error" sx={{ width: "100%" }}>
                   {tokensList &&
-                    tokensList?.map((token: SafeBalanceUsdResponse, index) => (
+                    tokensList?.map((token: SafeBalanceResponse, index) => (
                       <MenuItem key={index} value={token?.token?.name ?? "Ether"}>
                         <Stack direction="row" spacing={1}>
                           <img
@@ -391,7 +391,8 @@ const MakeTransactionDialog: React.FC<Props> = ({ children, walletAddress }) => 
                           />
                           <Typography>{token?.token?.name ?? "Ether"}</Typography>
                           <Typography>
-                            ({formatEther(token?.balance)} {token?.token?.symbol ?? "Ether"})
+                            ({formatUnits(token?.balance, token?.token?.decimals ?? 18)}{" "}
+                            {token?.token?.symbol ?? "Ether"})
                           </Typography>
                         </Stack>
                       </MenuItem>
@@ -416,7 +417,7 @@ const MakeTransactionDialog: React.FC<Props> = ({ children, walletAddress }) => 
                     // if (selectToken !== "Ether") {
                     //   const ERC20Token =
                     //     tokensList &&
-                    //     tokensList?.find((token: SafeBalanceUsdResponse) => token?.token?.name === selectToken);
+                    //     tokensList?.find((token: SafeBalanceResponse) => token?.token?.name === selectToken);
                     //   ERC20Token && +formatUnits(ERC20Token?.balance, ERC20Token?.token?.decimals) < sendAmount
                     //     ? setDisabledBtn(true)
                     //     : setDisabledBtn(false);

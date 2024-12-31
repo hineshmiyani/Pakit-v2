@@ -1,12 +1,12 @@
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 
-import { formatEther } from "@ethersproject/units";
+import { formatUnits } from "@ethersproject/units";
 import { Box, Container, Paper, Skeleton, Stack, Tab, Tabs, Typography } from "@mui/material";
 import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 
-import { SafeBalanceUsdResponse } from "@safe-global/safe-service-client";
-import { useGetSigner, useGetTotalBalance } from "../../../../hooks";
+import { SafeBalanceResponse } from "@safe-global/safe-service-client";
+import { useGetBalances, useGetSigner } from "../../../../hooks";
 import { styles } from "./style";
 
 interface TabPanelProps {
@@ -45,7 +45,7 @@ const Assets = () => {
   const [rows, setRows] = useState<any[]>([]);
 
   const signer = useGetSigner();
-  const { tokensBalance: tokensList } = useGetTotalBalance(signer, walletAddress);
+  const { tokensBalances: tokensList } = useGetBalances(signer, walletAddress);
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
@@ -89,14 +89,14 @@ const Assets = () => {
       align: "center",
       headerAlign: "center",
     },
-    {
-      field: "value",
-      headerName: "Value",
-      maxWidth: 400,
-      width: 400,
-      align: "center",
-      headerAlign: "center",
-    },
+    // {
+    //   field: "value",
+    //   headerName: "Value",
+    //   maxWidth: 400,
+    //   width: 400,
+    //   align: "center",
+    //   headerAlign: "center",
+    // },
   ];
 
   useEffect(() => {
@@ -104,12 +104,12 @@ const Assets = () => {
       const modifyTokenList =
         tokensList &&
         tokensList?.length > 0 &&
-        tokensList?.map((token: SafeBalanceUsdResponse, index: number) => {
+        tokensList?.map((token: SafeBalanceResponse, index: number) => {
           return {
             id: index + 1,
             asset: token,
-            balance: `${formatEther(token?.balance)} ${token?.token?.symbol ?? "Ether"}`,
-            value: `${token?.fiatBalance} ${token?.fiatCode}`,
+            balance: `${formatUnits(token?.balance, token?.token?.decimals ?? 18)} ${token?.token?.symbol ?? "Ether"}`,
+            // value: `${token?.fiatBalance} ${token?.fiatCode}`,
           };
         });
       return modifyTokenList || [];
