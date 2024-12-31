@@ -1,8 +1,4 @@
-import React, { useState } from "react";
-import Image from "next/image";
-import { useRouter } from "next/router";
-import { formatEther, formatUnits } from "ethers/lib/utils";
-import { useEthers } from "@usedapp/core";
+import { CallMade, CallReceived, ExpandMore, HighlightOff, PeopleAltOutlined } from "@mui/icons-material";
 import {
   Accordion,
   AccordionDetails,
@@ -15,7 +11,18 @@ import {
   Tabs,
   Typography,
 } from "@mui/material";
-import { CallMade, CallReceived, ExpandMore, HighlightOff, PeopleAltOutlined } from "@mui/icons-material";
+import {
+  EthereumTxWithTransfersResponse,
+  SafeBalanceUsdResponse,
+  SafeModuleTransactionWithTransfersResponse,
+  SafeMultisigTransactionWithTransfersResponse,
+} from "@safe-global/safe-service-client";
+import { useEthers } from "@usedapp/core";
+import { formatEther, formatUnits } from "ethers/lib/utils";
+import Image from "next/image";
+import { useRouter } from "next/router";
+import React, { useState } from "react";
+import { AccountAvatar, TransactionProgressStepper, TxNotFound } from "../../../../components";
 import {
   useGetAllTxs,
   useGetPendingTxs,
@@ -23,14 +30,7 @@ import {
   useGetTotalBalance,
   useNumConfirmationsRequired,
 } from "../../../../hooks";
-import { AccountAvatar, TransactionProgressStepper, TxNotFound } from "../../../../components";
 import { styles } from "./styles";
-import {
-  EthereumTxWithTransfersResponse,
-  SafeBalanceUsdResponse,
-  SafeModuleTransactionWithTransfersResponse,
-  SafeMultisigTransactionWithTransfersResponse,
-} from "@gnosis.pm/safe-service-client";
 
 interface TabPanelProps {
   children?: React.ReactNode;

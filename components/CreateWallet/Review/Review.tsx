@@ -1,17 +1,8 @@
-import React, { useEffect, useState } from "react";
-import Image from "next/image";
-import { useEthers } from "@usedapp/core";
-import {
-  Paper,
-  Typography,
-  Chip,
-  Box,
-  Divider,
-  IconButton,
-  Stack,
-  Tooltip,
-} from "@mui/material";
 import { ContentCopyRounded } from "@mui/icons-material";
+import { Box, Chip, Divider, IconButton, Paper, Stack, Tooltip, Typography } from "@mui/material";
+import { useEthers } from "@usedapp/core";
+import Image from "next/image";
+import React, { useEffect, useState } from "react";
 import { ShareIcon } from "../../index";
 import { styles } from "./styles";
 
@@ -25,8 +16,7 @@ const Review = () => {
 
   useEffect(() => {
     const { ownersList, requiredConfirmations } =
-      sessionStorage.getItem("ownersData") &&
-      JSON.parse(sessionStorage.getItem("ownersData") || "");
+      sessionStorage.getItem("ownersData") && JSON.parse(sessionStorage.getItem("ownersData") || "");
     setOwnerData({ ownersList, requiredConfirmations });
   }, []);
 
@@ -38,9 +28,7 @@ const Review = () => {
             Details
           </Typography>
 
-          <Typography variant="caption">
-            Any transaction requires the confirmation of:
-          </Typography>
+          <Typography variant="caption">Any transaction requires the confirmation of:</Typography>
           <Typography variant="body2" fontWeight="500" mb={3}>
             {requiredConfirmations} out of {ownersList.length} owners
           </Typography>
@@ -50,33 +38,24 @@ const Review = () => {
 
         <Box maxWidth="67%" flexBasis="67%">
           <Box p={3}>
-            <Typography variant="body1">
-              {ownersList.length} Wallet Owners
-            </Typography>
+            <Typography variant="body1">{ownersList.length} Wallet Owners</Typography>
           </Box>
 
           <Divider />
           {ownersList.length > 0 &&
             ownersList?.map((address: string, index: number) => (
               <Box key={address + index}>
-                <Stack
-                  py={1}
-                  px={3}
-                  spacing={1}
-                  direction="row"
-                  alignItems="center"
-                >
+                <Stack py={1} px={3} spacing={1} direction="row" alignItems="center">
                   <Image
                     src="/asset/images/avatar.png"
-                    width="32"
-                    height="32"
+                    width={32}
+                    height={32}
                     alt=""
-                    className="rounded-full object-cover"
+                    className="rounded-full object-cover flex-1"
                   />
                   <Typography variant="caption" component="p" width="340px">
                     <Typography variant="caption" fontWeight="bold">
-                      {library?.network?.name?.substring(0, 2)}
-                      {library?.network?.name?.substring(3, 4)}:
+                      {library?.network?.name?.substring(0, 3)}
                     </Typography>{" "}
                     {address}
                   </Typography>
@@ -94,14 +73,11 @@ const Review = () => {
                       <ContentCopyRounded sx={styles.copyIcon} />
                     </IconButton>
                   </Tooltip>
-                  <Tooltip title="View on goerli.etherscan.io" placement="top">
+                  <Tooltip title="View on sepolia.etherscan.io" placement="top">
                     <IconButton
                       size="small"
                       onClick={() => {
-                        window.open(
-                          `https://${library?.network?.name}.etherscan.io/address/${address}`,
-                          "_blank"
-                        );
+                        window.open(`https://${library?.network?.name}.etherscan.io/address/${address}`, "_blank");
                       }}
                     >
                       <ShareIcon />
@@ -117,11 +93,9 @@ const Review = () => {
       <Divider />
       <Box p={3}>
         <Typography variant="body1" component="div" gutterBottom>
-          You&apos;re about to create a new Safe{" "}
-          <Chip label={library?.network?.name} sx={styles.chip} /> on Goerli and
-          will have to confirm a transaction with your currently connected
-          wallet. The creation will cost approximately &gt; 0.001 GOR. The exact
-          amount will be determined by your wallet.
+          You&apos;re about to create a new Safe on <Chip label={library?.network?.name} sx={styles.chip} /> and will
+          have to confirm a transaction with your currently connected wallet. The creation will cost approximately &gt;
+          0.001 SEP. The exact amount will be determined by your wallet.
         </Typography>
       </Box>
     </Paper>

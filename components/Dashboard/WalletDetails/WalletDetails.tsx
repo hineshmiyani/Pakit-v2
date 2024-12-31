@@ -1,12 +1,12 @@
-import React from "react";
 import Image from "next/image";
 import { useRouter } from "next/router";
+import React from "react";
 
+import { Box, Button, Card, CardContent, Chip, Paper, Stack, Typography } from "@mui/material";
 import { useEthers } from "@usedapp/core";
-import { Typography, Paper, Card, CardContent, Chip, Stack, Box, Button } from "@mui/material";
 
-import { MakeTransactionDialog } from "../../index";
 import { useGetSigner, useGetTotalBalance } from "../../../hooks";
+import { MakeTransactionDialog } from "../../index";
 import { styles } from "./styles";
 
 const WalletDetails = () => {
@@ -37,8 +37,7 @@ const WalletDetails = () => {
             </Typography>{" "} */}
             <Typography variant="body1">
               <Typography variant="body1" component="span" fontWeight="bold">
-                {library?.network?.name?.substring(0, 2)}
-                {library?.network?.name?.substring(3, 4)}:
+                {library?.network?.name?.substring(0, 3)}:
               </Typography>{" "}
               {walletAddress}
             </Typography>

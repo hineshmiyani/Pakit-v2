@@ -1,21 +1,8 @@
-import React, { useState } from "react";
-import Image from "next/image";
+import { AccountBalanceWalletOutlined, ContentCopyRounded, KeyboardArrowDown } from "@mui/icons-material";
+import { Box, Button, Divider, IconButton, Menu, Stack, Tooltip, Typography } from "@mui/material";
 import { useEthers } from "@usedapp/core";
-import {
-  Box,
-  Button,
-  Divider,
-  IconButton,
-  Menu,
-  Stack,
-  Tooltip,
-  Typography,
-} from "@mui/material";
-import {
-  KeyboardArrowDown,
-  ContentCopyRounded,
-  AccountBalanceWalletOutlined,
-} from "@mui/icons-material";
+import Image from "next/image";
+import React, { useState } from "react";
 import { ShareIcon } from "../index";
 import { styles } from "./styles";
 
@@ -61,18 +48,11 @@ const AccountDialog = () => {
         }}
       >
         <Stack py={1} px={2} spacing={1} alignItems="center">
-          <Image
-            src="/asset/images/avatar.png"
-            width="60"
-            height="60"
-            alt=""
-            className="rounded-full object-cover"
-          />
+          <Image src="/asset/images/avatar.png" width="60" height="60" alt="" className="rounded-full object-cover" />
           <Stack direction="row" spacing={0.5} sx={styles.addressContainer}>
-            <Typography variant="body1" className="text-xs truncate">
+            <Typography variant="body1" className="!text-xs truncate">
               <Typography variant="caption" fontWeight="bold">
-                {library?.network?.name?.substring(0, 2)}
-                {library?.network?.name?.substring(3, 4)}:
+                {library?.network?.name?.substring(0, 3)}:
               </Typography>{" "}
               {account?.slice(0, 6)}
               ...{account?.slice(-4)}
@@ -93,14 +73,11 @@ const AccountDialog = () => {
               </IconButton>
             </Tooltip>
 
-            <Tooltip title="View on goerli.etherscan.io" placement="top">
+            <Tooltip title="View on sepolia.etherscan.io" placement="top">
               <IconButton
                 size="small"
                 onClick={() => {
-                  window.open(
-                    `https://${library?.network?.name}.etherscan.io/address/${account}`,
-                    "_blank"
-                  );
+                  window.open(`https://${library?.network?.name}.etherscan.io/address/${account}`, "_blank");
                 }}
               >
                 <ShareIcon />
@@ -111,42 +88,25 @@ const AccountDialog = () => {
 
         <Divider />
 
-        <Stack
-          py={0.8}
-          px={2}
-          direction="row"
-          alignItems="center"
-          justifyContent="space-between"
-        >
+        <Stack py={0.8} px={2} direction="row" alignItems="center" justifyContent="space-between">
           <Typography variant="caption">Wallet</Typography>
           <Box display="flex" gap="5px">
-            <AccountBalanceWalletOutlined
-              fontSize="small"
-              sx={styles.walletIcon}
-            />
+            <AccountBalanceWalletOutlined fontSize="small" sx={styles.walletIcon} />
             <Typography variant="caption">
-              {library?.connection?.url?.[0]?.toUpperCase() +
+              {(library as any)?.connection?.url?.[0]?.toUpperCase() +
                 "" +
-                library?.connection?.url?.substring(1)}
+                (library as any)?.connection?.url?.substring(1)}
             </Typography>
           </Box>
         </Stack>
 
         <Divider />
 
-        <Stack
-          py={0.8}
-          px={2}
-          direction="row"
-          alignItems="center"
-          justifyContent="space-between"
-        >
+        <Stack py={0.8} px={2} direction="row" alignItems="center" justifyContent="space-between">
           <Typography variant="caption">Connected Network</Typography>
           <Box>
             <Typography variant="caption">
-              {library?.network?.name?.substring(0, 1)?.toUpperCase() +
-                "" +
-                library?.network?.name?.substring(1)}
+              {library?.network?.name?.substring(0, 1)?.toUpperCase() + "" + library?.network?.name?.substring(1)}
             </Typography>
           </Box>
         </Stack>

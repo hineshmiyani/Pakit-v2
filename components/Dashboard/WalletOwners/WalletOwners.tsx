@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from "react";
-import { useEthers } from "@usedapp/core";
-import { Typography, Paper, Stack, Box, IconButton, Tooltip, Skeleton } from "@mui/material";
-import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
-import { useGetOwners, useGetSigner } from "../../../hooks";
 import { ContentCopyRounded } from "@mui/icons-material";
-import { ShareIcon } from "../../index";
+import { Box, IconButton, Paper, Skeleton, Stack, Tooltip, Typography } from "@mui/material";
+import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
+import { useEthers } from "@usedapp/core";
 import { useRouter } from "next/router";
+import React, { useEffect, useState } from "react";
+import { useGetOwners, useGetSigner } from "../../../hooks";
+import { ShareIcon } from "../../index";
 import { styles } from "./styles";
 
 const AddressCell = (params: GridRenderCellParams) => {
@@ -16,8 +16,7 @@ const AddressCell = (params: GridRenderCellParams) => {
     <Stack py={1} px={3} spacing={1} direction="row" alignItems="center">
       <Typography variant="caption" component="p" width="340px">
         <Typography variant="caption" fontWeight="bold">
-          {library?.network?.name?.substring(0, 2)}
-          {library?.network?.name?.substring(3, 4)}:
+          {library?.network?.name?.substring(0, 3)}:
         </Typography>{" "}
         {params?.value}
       </Typography>
@@ -36,7 +35,7 @@ const AddressCell = (params: GridRenderCellParams) => {
           <ContentCopyRounded sx={styles.copyIcon} />
         </IconButton>
       </Tooltip>
-      <Tooltip title="View on goerli.etherscan.io" placement="top">
+      <Tooltip title="View on sepolia.etherscan.io" placement="top">
         <IconButton
           size="small"
           sx={styles.iconButton}

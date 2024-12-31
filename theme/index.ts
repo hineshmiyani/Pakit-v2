@@ -1,5 +1,5 @@
-import { createTheme } from "@mui/material/styles";
 import { grey } from "@mui/material/colors";
+import { createTheme } from "@mui/material/styles";
 
 declare module "@mui/material/styles" {
   interface Palette {
@@ -37,7 +37,7 @@ export const theme = createTheme({
       main: "#374151",
       dark: "#",
       contrastText: "#ffffff",
-      buttonColor: "#f02525",
+      buttonColor: "#ef504c",
     },
     secondary: {
       main: "#020202",

@@ -1,34 +1,34 @@
-import React, { useEffect, useState } from "react";
-import Image from "next/image";
-import { useRouter } from "next/router";
-import { utils } from "ethers";
-import { formatEther, parseEther, parseUnits, formatUnits } from "@ethersproject/units";
-import { useEtherBalance, useEthers, useTokenBalance } from "@usedapp/core";
-import toast from "react-hot-toast";
+import { formatEther, formatUnits, parseEther, parseUnits } from "@ethersproject/units";
+import { CallMade, Close, ContentCopyRounded, TollRounded } from "@mui/icons-material";
 import {
   Box,
   Button,
   Dialog,
-  DialogTitle,
-  DialogContent,
   DialogActions,
-  IconButton,
-  styled,
-  Typography,
-  Stack,
-  Tooltip,
+  DialogContent,
+  DialogTitle,
   Divider,
-  TextField,
+  IconButton,
   MenuItem,
   Select,
   SelectChangeEvent,
+  Stack,
+  styled,
+  TextField,
+  Tooltip,
+  Typography,
 } from "@mui/material";
-import { TollRounded, Close, ContentCopyRounded, CallMade } from "@mui/icons-material";
-import { SafeTransactionDataPartial } from "@gnosis.pm/safe-core-sdk-types";
-import { SafeBalanceUsdResponse } from "@gnosis.pm/safe-service-client";
+import { SafeTransactionDataPartial } from "@safe-global/safe-core-sdk-types";
+import { SafeBalanceUsdResponse } from "@safe-global/safe-service-client";
+import { useEtherBalance, useEthers, useTokenBalance } from "@usedapp/core";
+import { utils } from "ethers";
+import Image from "next/image";
+import { useRouter } from "next/router";
+import React, { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 
-import { createNewTransaction, encodeERC20TokenTransferData } from "../../../services";
 import { useGetSigner, useGetTotalBalance } from "../../../hooks";
+import { createNewTransaction, encodeERC20TokenTransferData } from "../../../services";
 import { ShareIcon } from "../../index";
 import { styles } from "./styles";
 
@@ -217,8 +217,7 @@ const MakeTransactionDialog: React.FC<Props> = ({ children, walletAddress }) => 
                 />
                 <Typography variant="body2">
                   <Typography variant="caption" fontWeight="bold">
-                    {library?.network?.name?.substring(0, 2)}
-                    {library?.network?.name?.substring(3, 4)}:
+                    {library?.network?.name?.substring(0, 3)}:
                   </Typography>{" "}
                   {account}
                 </Typography>
@@ -239,7 +238,7 @@ const MakeTransactionDialog: React.FC<Props> = ({ children, walletAddress }) => 
                       <ContentCopyRounded sx={styles.copyIcon} />
                     </IconButton>
                   </Tooltip>
-                  <Tooltip title="View on goerli.etherscan.io" placement="top">
+                  <Tooltip title="View on sepolia.etherscan.io" placement="top">
                     <IconButton
                       size="small"
                       sx={styles.iconButton}
@@ -306,8 +305,7 @@ const MakeTransactionDialog: React.FC<Props> = ({ children, walletAddress }) => 
                 />
                 <Typography variant="body2">
                   <Typography variant="caption" fontWeight="bold">
-                    {library?.network?.name?.substring(0, 2)}
-                    {library?.network?.name?.substring(3, 4)}:
+                    {library?.network?.name?.substring(0, 3)}:
                   </Typography>{" "}
                   {walletAddress ? walletAddress : ""}
                 </Typography>
@@ -328,7 +326,7 @@ const MakeTransactionDialog: React.FC<Props> = ({ children, walletAddress }) => 
                       <ContentCopyRounded sx={styles.copyIcon} />
                     </IconButton>
                   </Tooltip>
-                  <Tooltip title="View on goerli.etherscan.io" placement="top">
+                  <Tooltip title="View on sepolia.etherscan.io" placement="top">
                     <IconButton
                       size="small"
                       sx={styles.iconButton}

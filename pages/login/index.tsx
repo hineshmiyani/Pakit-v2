@@ -1,8 +1,8 @@
-import React, { useEffect } from "react";
+import { Button, Container, Stack, Typography } from "@mui/material";
+import { useEthers } from "@usedapp/core";
 import Image from "next/image";
 import { useRouter } from "next/router";
-import { useEthers } from "@usedapp/core";
-import { Button, Container, Stack, Typography } from "@mui/material";
+import React, { useEffect } from "react";
 import { styles } from "./styles";
 
 const Login = () => {
@@ -21,33 +21,20 @@ const Login = () => {
   }, [account, redirect_url, router]);
 
   return (
-    <>
-      <Container maxWidth={false} sx={styles.container}>
-        <Stack alignItems="center">
-          <Image
-            src="/asset/images/pakitLogo.png"
-            height={160}
-            width={160}
-            className="object-cover"
-            alt=""
-          />
-          <Typography variant="h1" fontWeight="bold" mb="14px" sx={styles.text}>
-            Open your Pakit
-          </Typography>
-          <Typography variant="h6" gutterBottom sx={styles.text}>
-            Get Started by Logging in with your Metamask Wallet.
-          </Typography>
-          <Button
-            variant="contained"
-            size="large"
-            sx={styles.button}
-            onClick={() => activateBrowserWallet()}
-          >
-            Login with Metamask
-          </Button>
-        </Stack>
-      </Container>
-    </>
+    <Container maxWidth={false} sx={styles.container}>
+      <Stack alignItems="center" spacing={2}>
+        <Image src="/asset/images/pakitLogo.png" height={160} width={160} alt="Pakit Logo" />
+        <Typography variant="h3" fontWeight="bold" sx={styles.text}>
+          Open your Pakit
+        </Typography>
+        <Typography variant="h6" sx={styles.text} gutterBottom>
+          Get Started by Logging in with your Metamask Wallet.
+        </Typography>
+        <Button variant="contained" size="large" sx={styles.button} onClick={() => activateBrowserWallet()}>
+          Login with Metamask
+        </Button>
+      </Stack>
+    </Container>
   );
 };
 

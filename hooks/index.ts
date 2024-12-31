@@ -1,20 +1,20 @@
 import { useEffect, useState } from "react";
 
-import { BigNumber, ethers } from "ethers";
 import { JsonRpcSigner } from "@ethersproject/providers";
-import { useEthers } from "@usedapp/core";
-import Safe from "@gnosis.pm/safe-core-sdk";
+import Safe from "@safe-global/safe-core-sdk";
 import {
   AllTransactionsListResponse,
   OwnerResponse,
   SafeBalanceUsdResponse,
   SafeMultisigTransactionListResponse,
-  SafeMultisigTransactionResponse,
   TokenInfoListResponse,
-} from "@gnosis.pm/safe-service-client";
+} from "@safe-global/safe-service-client";
+import { useEthers } from "@usedapp/core";
+import { BigNumber, ethers } from "ethers";
 
-import { createEthersAdapter, safeServiceClient } from "../services";
+import { SafeMultisigTransactionResponse } from "@safe-global/safe-core-sdk-types";
 import { useRouter } from "next/router";
+import { createEthersAdapter, safeServiceClient } from "../services";
 
 /**
  * Get Signer
@@ -176,7 +176,7 @@ export function useGetTokenList(signer: JsonRpcSigner | undefined) {
  * Get Transaction Information
  */
 export function useGetTxInfo(signer: JsonRpcSigner | undefined, safeTxHash: string) {
-  const [txInfo, setTxInfoo] = useState<SafeMultisigTransactionResponse>();
+  const [txInfo, setTxInfo] = useState<SafeMultisigTransactionResponse>();
 
   useEffect(() => {
     if (!signer || !safeTxHash) return;
@@ -184,7 +184,7 @@ export function useGetTxInfo(signer: JsonRpcSigner | undefined, safeTxHash: stri
     (async () => {
       const safeService = safeServiceClient(signer);
       const txInfo: SafeMultisigTransactionResponse = await safeService.getTransaction(safeTxHash);
-      setTxInfoo(txInfo);
+      setTxInfo(txInfo);
     })();
   }, [signer, safeTxHash]);
 

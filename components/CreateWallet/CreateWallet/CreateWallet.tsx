@@ -1,9 +1,9 @@
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
-import toast from "react-hot-toast";
-import type Safe from "@gnosis.pm/safe-core-sdk";
 import { Box, Button, Step, StepConnector, StepLabel, Stepper, Typography } from "@mui/material";
+import type Safe from "@safe-global/safe-core-sdk";
+import toast from "react-hot-toast";
 
 import { useGetSigner, useGetWallets } from "../../../hooks";
 import { createNewWallet } from "../../../services";
@@ -40,6 +40,7 @@ const CreateWallet = () => {
   const allStepsCompleted = completedSteps === totalSteps;
 
   const createWallet = async () => {
+    debugger;
     setDisabledBtn(true);
 
     const ownersData = sessionStorage.getItem("ownersData");
@@ -86,9 +87,10 @@ const CreateWallet = () => {
           setDisabledBtn(false);
         }
       } catch (err: any) {
+        console.log("Error:", { err });
         // Error
         toast.dismiss(confirmTxToast);
-        toast.error(err?.reason);
+        toast.error(err?.reason || err?.message || "Error creating wallet");
         setDisabledBtn(false);
       }
     }

@@ -1,14 +1,14 @@
-import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/router";
+import React, { useEffect, useState } from "react";
 
 import { formatEther } from "@ethersproject/units";
-import { useEthers } from "@usedapp/core";
-import { Box, Button, Divider, IconButton, Stack, Tooltip, Typography } from "@mui/material";
 import { AddCircleOutlined, ContentCopyRounded } from "@mui/icons-material";
+import { Box, Button, Divider, IconButton, Stack, Tooltip, Typography } from "@mui/material";
+import { useEthers } from "@usedapp/core";
 
 import { useGetSigner, useGetTotalBalance, useGetWallets } from "../../../hooks";
-import { ShareIcon, MakeTransactionDialog, SideDrawer } from "../../index";
+import { MakeTransactionDialog, ShareIcon, SideDrawer } from "../../index";
 import { styles } from "./styles";
 
 const Sidebar = () => {
@@ -53,8 +53,7 @@ const Sidebar = () => {
             <Box>
               <Typography variant="body2">
                 <Typography variant="caption" fontWeight="bold">
-                  {library?.network?.name?.substring(0, 2)}
-                  {library?.network?.name?.substring(3, 4)}:
+                  {library?.network?.name?.substring(0, 3)}:
                 </Typography>{" "}
                 {walletAddress?.slice(0, 6)}
                 ...{walletAddress?.slice(-4)}
@@ -82,7 +81,7 @@ const Sidebar = () => {
                 <ContentCopyRounded sx={styles.copyIcon} />
               </IconButton>
             </Tooltip>
-            <Tooltip title="View on goerli.etherscan.io" placement="top">
+            <Tooltip title="View on sepolia.etherscan.io" placement="top">
               <IconButton
                 size="small"
                 sx={styles.iconButton}

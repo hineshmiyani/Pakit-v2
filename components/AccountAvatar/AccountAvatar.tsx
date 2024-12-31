@@ -1,8 +1,8 @@
-import React, { useState } from "react";
-import Image from "next/image";
-import { useEthers } from "@usedapp/core";
-import { Stack, Typography, Tooltip, IconButton } from "@mui/material";
 import { ContentCopyRounded } from "@mui/icons-material";
+import { IconButton, Stack, Tooltip, Typography } from "@mui/material";
+import { useEthers } from "@usedapp/core";
+import Image from "next/image";
+import React, { useState } from "react";
 import { ShareIcon } from "../index";
 import { styles } from "./styles";
 
@@ -52,7 +52,7 @@ const AccountAvatar: React.FC<Props> = ({ toAddress, truncate }) => {
           <ContentCopyRounded sx={styles.copyIcon} />
         </IconButton>
       </Tooltip>
-      <Tooltip title="View on goerli.etherscan.io" placement="top">
+      <Tooltip title="View on sepolia.etherscan.io" placement="top">
         <IconButton
           size="small"
           sx={styles.iconButton}

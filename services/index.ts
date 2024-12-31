@@ -1,10 +1,10 @@
-import { ethers } from "ethers";
-import { JsonRpcSigner } from "@ethersproject/providers";
 import { Interface } from "@ethersproject/abi";
-import EthersAdapter from "@gnosis.pm/safe-ethers-lib";
-import { SafeTransactionDataPartial } from "@gnosis.pm/safe-core-sdk-types";
-import Safe, { SafeFactory, type DeploySafeProps } from "@gnosis.pm/safe-core-sdk";
-import SafeServiceClient, { SafeMultisigTransactionResponse } from "@gnosis.pm/safe-service-client";
+import { JsonRpcSigner } from "@ethersproject/providers";
+import Safe, { SafeFactory, type DeploySafeProps } from "@safe-global/safe-core-sdk";
+import { SafeMultisigTransactionResponse, SafeTransactionDataPartial } from "@safe-global/safe-core-sdk-types";
+import EthersAdapter from "@safe-global/safe-ethers-lib";
+import SafeServiceClient from "@safe-global/safe-service-client";
+import { ethers } from "ethers";
 
 /**
  * Initialize an EthAdapter
@@ -12,7 +12,7 @@ import SafeServiceClient, { SafeMultisigTransactionResponse } from "@gnosis.pm/s
 export const createEthersAdapter = (signer: JsonRpcSigner) => {
   return new EthersAdapter({
     ethers,
-    signer: signer,
+    signerOrProvider: signer,
   });
 };
 
@@ -22,7 +22,7 @@ export const createEthersAdapter = (signer: JsonRpcSigner) => {
 export const safeServiceClient = (signer: JsonRpcSigner) => {
   const ethAdapter = createEthersAdapter(signer);
   return new SafeServiceClient({
-    txServiceUrl: "https://safe-transaction-goerli.safe.global/",
+    txServiceUrl: "https://safe-transaction-sepolia.safe.global",
     ethAdapter,
   });
 };

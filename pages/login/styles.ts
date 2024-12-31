@@ -9,30 +9,27 @@ interface IStyles {
 export const styles: IStyles = {
   container: {
     minHeight: "100vh",
-    backgroundColor: "primary.contrastText",
-    backgroundImage: "url('../asset/images/background.webp')",
+    background: "#FFE6E6",
     display: "flex",
     flexDirection: "column",
     justifyContent: "center",
     alignItems: "center",
     textAlign: "center",
-    backgroundPosition: "50% 25%",
-    backgroundSize: "cover",
-    backgroundRepeat: "no-repeat",
     overflow: "hidden",
+    p: 4,
   },
   text: {
-    color: "primary.main",
+    color: "#333333",
   },
   button: {
-    backgroundColor: "primary.main",
+    backgroundColor: "primary.buttonColor",
     "&:hover": {
-      backgroundColor: "primary.main",
+      backgroundColor: "primary.buttonColor",
     },
     color: "primary.contrastText",
     borderRadius: "4px",
     fontWeight: 600,
     fontSize: "16px",
-    mt: "20px",
+    mt: "32px !important",
   },
 };

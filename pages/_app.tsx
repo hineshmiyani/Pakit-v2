@@ -1,19 +1,19 @@
 import type { AppProps } from "next/app";
 
+import { StyledEngineProvider, ThemeProvider } from "@mui/material";
+import { Config, DAppProvider, Sepolia } from "@usedapp/core";
 import { getDefaultProvider } from "ethers";
 import { Toaster } from "react-hot-toast";
-import { StyledEngineProvider, ThemeProvider } from "@mui/material";
-import { Mainnet, DAppProvider, Config, Goerli } from "@usedapp/core";
 
-import { theme } from "../theme";
 import { Layout } from "../components";
 import "../styles/globals.css";
+import { theme } from "../theme";
 
 const config: Config = {
-  readOnlyChainId: Goerli.chainId,
+  readOnlyChainId: Sepolia.chainId,
   readOnlyUrls: {
-    [Mainnet.chainId]: getDefaultProvider("mainnet"),
-    [Goerli.chainId]: process.env.NEXT_PUBLIC_GOERLI_RPC_URL || "",
+    // [Mainnet.chainId]: getDefaultProvider("mainnet"),
+    [Sepolia.chainId]: getDefaultProvider("sepolia") || process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL || "",
   },
 };
 

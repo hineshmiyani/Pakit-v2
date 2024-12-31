@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import React, { useEffect, useState } from "react";
 
 import { formatEther } from "@ethersproject/units";
-import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import { Box, Container, Paper, Skeleton, Stack, Tab, Tabs, Typography } from "@mui/material";
+import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 
+import { SafeBalanceUsdResponse } from "@safe-global/safe-service-client";
 import { useGetSigner, useGetTotalBalance } from "../../../../hooks";
 import { styles } from "./style";
-import { SafeBalanceUsdResponse } from "@gnosis.pm/safe-service-client";
 
 interface TabPanelProps {
   children?: React.ReactNode;

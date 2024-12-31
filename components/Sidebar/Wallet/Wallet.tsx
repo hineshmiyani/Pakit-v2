@@ -1,7 +1,7 @@
-import React from "react";
-import { useRouter } from "next/router";
+import { Avatar, ListItem, ListItemAvatar, ListItemButton, ListItemText, Typography } from "@mui/material";
 import { useEthers } from "@usedapp/core";
-import { ListItem, ListItemButton, ListItemAvatar, Avatar, ListItemText, Typography } from "@mui/material";
+import { useRouter } from "next/router";
+import React from "react";
 
 type Props = {
   wallet: string;
@@ -39,8 +39,7 @@ const Wallet: React.FC<Props> = ({ wallet, walletId }) => {
               </Typography> */}
               <Typography variant="body2">
                 <Typography variant="body2" component="span" fontWeight="bold">
-                  {library?.network?.name?.substring(0, 2)}
-                  {library?.network?.name?.substring(3, 4)}:
+                  {library?.network?.name?.substring(0, 3)}:
                 </Typography>{" "}
                 {wallet?.slice(0, 6)}
                 ...{wallet?.slice(-4)}
